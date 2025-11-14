@@ -37,10 +37,16 @@ class Produk extends Model
     public function getGambarUrlAttribute()
     {
         if ($this->gambar) {
-            return asset('storage/produks/' . $this->gambar);
+            $path = public_path('storage/produks/' . $this->gambar);
+
+            if (file_exists($path)) {
+                return asset('storage/produks/' . $this->gambar);
+            }
         }
-        return asset('images/default-product.png');
+
+        return asset('storage/produks/default-product.png');
     }
+
 
     public function getStokTersediaAttribute()
     {

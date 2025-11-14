@@ -49,6 +49,8 @@
                     <!-- Product Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
                         @foreach($produks as $produk)
+                        
+
                         <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-purple-50 transition-colors product-item"
                             data-produk-id="{{ $produk->id }}"
                             data-nama="{{ $produk->nama_produk }}"
