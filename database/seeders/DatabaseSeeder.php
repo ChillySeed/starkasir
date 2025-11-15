@@ -4,10 +4,17 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Golongan;
 use App\Models\Produk;
 use App\Models\Pelanggan;
+use App\Models\LevelHargaQuantity;
+use App\Models\LevelHargaGolongan;
+use App\Models\Transaksi;
+use App\Models\DetailTransaksi;
+use App\Models\StokBarang;
+use App\Models\Laporan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -325,5 +332,98 @@ class DatabaseSeeder extends Seeder
         foreach ($pelanggans as $pelanggan) {
             Pelanggan::create($pelanggan);
         }
+        $levelHargaQuantities = [
+        [
+            'produk_id' => 1,
+            'qty_min' => 10,
+            'qty_max' => 49,
+            'harga_khusus' => 70000,
+            'keterangan' => 'Harga grosir kecil',
+        ],
+        [
+            'produk_id' => 1,
+            'qty_min' => 50,
+            'harga_khusus' => 65000,
+            'keterangan' => 'Harga grosir besar',
+        ],
+        [
+            'produk_id' => 2,
+            'qty_min' => 5,
+            'harga_khusus' => 32000,
+            'keterangan' => 'Harga khusus quantity',
+        ],
+        ];
+
+        foreach ($levelHargaQuantities as $level) {
+            LevelHargaQuantity::create($level);
+        }
+
+        // Create sample LevelHargaGolongan
+        $levelHargaGolongans = [
+            [
+                'produk_id' => 1,
+                'golongan_id' => 4, // Gold
+                'harga_khusus' => 68000,
+                'keterangan' => 'Harga khusus member gold',
+            ],
+            [
+                'produk_id' => 2,
+                'golongan_id' => 3, // Silver
+                'harga_khusus' => 33000,
+                'keterangan' => 'Harga khusus member silver',
+            ],
+        ];
+
+        foreach ($levelHargaGolongans as $level) {
+            LevelHargaGolongan::create($level);
+        }
+        for ($i = 0; $i < 50; $i++) {
+            $daysAgo = rand(0, 6);
+            $transactionDate = Carbon::now()->subDays($daysAgo);
+            
+            $transaksi = Transaksi::create([
+                'kode_transaksi' => 'TRX-' . $transactionDate->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'user_id' => 2, // kasir
+                'pelanggan_id' => rand(1, 3),
+                'tanggal_transaksi' => $transactionDate,
+                'total_amount' => rand(50000, 500000),
+                'total_diskon' => rand(0, 50000),
+                'amount_paid' => rand(50000, 500000),
+                'kembalian' => rand(0, 50000),
+                'metode_pembayaran' => ['tunai', 'debit', 'qris'][rand(0, 2)],
+                'status' => 'completed',
+            ]);
+
+            // Create transaction details
+            $produkCount = rand(1, 5);
+            for ($j = 0; $j < $produkCount; $j++) {
+                $produk = Produk::find(rand(1, 5));
+                $qty = rand(1, 10);
+                
+                DetailTransaksi::create([
+                    'transaksi_id' => $transaksi->id,
+                    'produk_id' => $produk->id,
+                    'qty' => $qty,
+                    'harga_satuan' => $produk->harga_dasar,
+                    'diskon_persen' => 0,
+                    'diskon_amount' => 0,
+                    'subtotal' => $qty * $produk->harga_dasar,
+                ]);
+
+                // Record stock movement
+                StokBarang::recordMovement(
+                    $produk->id,
+                    'penjualan',
+                    $qty,
+                    "Penjualan transaksi {$transaksi->kode_transaksi}",
+                    $transaksi->id
+                );
+            }
+        }
+
+        // Create some stock adjustments
+        StokBarang::recordMovement(1, 'pembelian', 20, 'Restock supplier', null);
+        StokBarang::recordMovement(2, 'pembelian', 15, 'Restock supplier', null);
+        StokBarang::recordMovement(3, 'adjustment', 5, 'Koreksi stok', null);
+        }
     }
-}

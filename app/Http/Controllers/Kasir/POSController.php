@@ -60,11 +60,37 @@ class PosController extends Controller
 
             foreach ($items as $item) {
                 $produk = Produk::find($item['produk_id']);
-                $subtotal = $produk->harga_dasar * $item['qty'];
-                $diskon_item = ($subtotal * $diskon_persen) / 100;
+    
+                // Start with base price
+                $hargaSatuan = $produk->harga_dasar;
+                
+                // Check for quantity-based pricing
+                $hargaQuantity = $produk->getHargaBerdasarkanQuantity($item['qty']);
+                if ($hargaQuantity < $hargaSatuan) {
+                    $hargaSatuan = $hargaQuantity;
+                }
+                
+                // Check for golongan-based pricing if customer selected
+                if ($request->pelanggan_id) {
+                    $pelanggan = Pelanggan::with('golongan')->find($request->pelanggan_id);
+                    $hargaGolongan = $produk->getHargaBerdasarkanGolongan($pelanggan->golongan_id);
+                    
+                    // Use the lowest price between all available pricing
+                    if ($hargaGolongan < $hargaSatuan) {
+                        $hargaSatuan = $hargaGolongan;
+                    }
+                    
+                    // Apply golongan discount if no special price set
+                    $diskonPersen = $pelanggan->golongan->diskon_persen;
+                } else {
+                    $diskonPersen = 0;
+                }
+                
+                $subtotal = $hargaSatuan * $item['qty'];
+                $diskonItem = ($subtotal * $diskonPersen) / 100;
                 
                 $total_amount += $subtotal;
-                $total_diskon += $diskon_item;
+                $total_diskon += $diskonItem;
             }
 
             $grand_total = $total_amount - $total_diskon;
@@ -134,6 +160,13 @@ class PosController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
+        StokBarang::recordMovement(
+            $item['produk_id'],
+            'penjualan',
+            $item['qty'],
+            "Penjualan transaksi {$transaksi->kode_transaksi}",
+            $transaksi->id
+        );
     }
 
     public function riwayatTransaksi()
