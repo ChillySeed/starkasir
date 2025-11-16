@@ -360,26 +360,27 @@ class DatabaseSeeder extends Seeder
         foreach ($pelanggans as $pelanggan) {
             Pelanggan::create($pelanggan);
         }
+
         $levelHargaQuantities = [
-        [
-            'produk_id' => 1,
-            'qty_min' => 10,
-            'qty_max' => 49,
-            'harga_khusus' => 70000,
-            'keterangan' => 'Harga grosir kecil',
-        ],
-        [
-            'produk_id' => 1,
-            'qty_min' => 50,
-            'harga_khusus' => 65000,
-            'keterangan' => 'Harga grosir besar',
-        ],
-        [
-            'produk_id' => 2,
-            'qty_min' => 5,
-            'harga_khusus' => 32000,
-            'keterangan' => 'Harga khusus quantity',
-        ],
+            [
+                'produk_id' => 1,
+                'qty_min' => 10,
+                'qty_max' => 49,
+                'harga_khusus' => 70000,
+                'keterangan' => 'Harga grosir kecil',
+            ],
+            [
+                'produk_id' => 1,
+                'qty_min' => 50,
+                'harga_khusus' => 65000,
+                'keterangan' => 'Harga grosir besar',
+            ],
+            [
+                'produk_id' => 2,
+                'qty_min' => 5,
+                'harga_khusus' => 32000,
+                'keterangan' => 'Harga khusus quantity',
+            ],
         ];
 
         foreach ($levelHargaQuantities as $level) {
@@ -405,6 +406,8 @@ class DatabaseSeeder extends Seeder
         foreach ($levelHargaGolongans as $level) {
             LevelHargaGolongan::create($level);
         }
+
+        // Create transactions and update product stock
         for ($i = 0; $i < 50; $i++) {
             $daysAgo = rand(0, 6);
             $transactionDate = Carbon::now()->subDays($daysAgo);
@@ -412,7 +415,7 @@ class DatabaseSeeder extends Seeder
             $transaksi = Transaksi::create([
                 'kode_transaksi' => 'TRX-' . $transactionDate->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'user_id' => 2, // kasir
-                'pelanggan_id' => rand(1, 3),
+                'pelanggan_id' => rand(1, 7), // Use customer IDs 1-7
                 'tanggal_transaksi' => $transactionDate,
                 'total_amount' => rand(50000, 500000),
                 'total_diskon' => rand(0, 50000),
@@ -424,34 +427,75 @@ class DatabaseSeeder extends Seeder
 
             // Create transaction details
             $produkCount = rand(1, 5);
+            $totalAmount = 0;
+            
             for ($j = 0; $j < $produkCount; $j++) {
-                $produk = Produk::find(rand(1, 5));
+                $produk = Produk::find(rand(1, 19)); // Use product IDs 1-19
                 $qty = rand(1, 10);
+                $hargaSatuan = $produk->harga_dasar;
+                $subtotal = $qty * $hargaSatuan;
+                $totalAmount += $subtotal;
                 
                 DetailTransaksi::create([
                     'transaksi_id' => $transaksi->id,
                     'produk_id' => $produk->id,
                     'qty' => $qty,
-                    'harga_satuan' => $produk->harga_dasar,
+                    'harga_satuan' => $hargaSatuan,
                     'diskon_persen' => 0,
                     'diskon_amount' => 0,
-                    'subtotal' => $qty * $produk->harga_dasar,
+                    'subtotal' => $subtotal,
                 ]);
 
+                // Update product stock directly
+                $produk->decrement('stok_sekarang', $qty);
+
                 // Record stock movement
-                StokBarang::recordMovement(
-                    $produk->id,
-                    'penjualan',
-                    $qty,
-                    "Penjualan transaksi {$transaksi->kode_transaksi}",
-                    $transaksi->id
-                );
+                StokBarang::create([
+                    'produk_id' => $produk->id,
+                    'qty_awal' => $produk->stok_sekarang + $qty, // Stock before transaction
+                    'qty_keluar' => $qty,
+                    'qty_masuk' => 0,
+                    'qty_akhir' => $produk->stok_sekarang, // Stock after transaction
+                    'jenis_perubahan' => 'penjualan',
+                    'keterangan' => "Penjualan transaksi {$transaksi->kode_transaksi}",
+                    'transaksi_id' => $transaksi->id,
+                    'tanggal_perubahan' => $transactionDate,
+                ]);
             }
+
+            // Update transaction total amount
+            $transaksi->update(['total_amount' => $totalAmount]);
         }
 
-        // Create some stock adjustments
-        StokBarang::recordMovement(1, 'pembelian', 20, 'Restock supplier', null);
-        StokBarang::recordMovement(2, 'pembelian', 15, 'Restock supplier', null);
-        StokBarang::recordMovement(3, 'adjustment', 5, 'Koreksi stok', null);
+        // Create some stock adjustments/purchases
+        $adjustments = [
+            ['produk_id' => 1, 'qty_masuk' => 20, 'keterangan' => 'Restock supplier'],
+            ['produk_id' => 2, 'qty_masuk' => 15, 'keterangan' => 'Restock supplier'],
+            ['produk_id' => 3, 'qty_masuk' => 50, 'keterangan' => 'Restock supplier'],
+            ['produk_id' => 4, 'qty_masuk' => 25, 'keterangan' => 'Restock supplier'],
+            ['produk_id' => 5, 'qty_masuk' => 100, 'keterangan' => 'Restock supplier'],
+        ];
+
+        foreach ($adjustments as $adjustment) {
+            $produk = Produk::find($adjustment['produk_id']);
+            $stokAwal = $produk->stok_sekarang;
+            $stokAkhir = $stokAwal + $adjustment['qty_masuk'];
+
+            // Update product stock
+            $produk->update(['stok_sekarang' => $stokAkhir]);
+
+            // Record stock movement
+            StokBarang::create([
+                'produk_id' => $adjustment['produk_id'],
+                'qty_awal' => $stokAwal,
+                'qty_keluar' => 0,
+                'qty_masuk' => $adjustment['qty_masuk'],
+                'qty_akhir' => $stokAkhir,
+                'jenis_perubahan' => 'pembelian',
+                'keterangan' => $adjustment['keterangan'],
+                'transaksi_id' => null,
+                'tanggal_perubahan' => Carbon::now()->subDays(rand(1, 3)),
+            ]);
         }
     }
+}
