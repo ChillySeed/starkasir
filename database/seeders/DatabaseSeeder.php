@@ -307,25 +307,53 @@ class DatabaseSeeder extends Seeder
         // Create Sample Customers
         $pelanggans = [
             [
-                'kode_pelanggan' => 'CUST001',
-                'nama' => 'Budi Santoso',
+                'kode_pelanggan' => 'CUST004',
+                'nama' => 'Dewi Lestari',
+                'golongan_id' => 1, // General
+                'no_telp' => '081311122233',
+                'alamat' => 'Jl. Melati No. 12',
+            ],
+            [
+                'kode_pelanggan' => 'CUST005',
+                'nama' => 'Rizki Pratama',
+                'golongan_id' => 1, // General
+                'no_telp' => '081322233344',
+                'alamat' => 'Jl. Anggrek No. 34',
+            ],
+            [
+                'kode_pelanggan' => 'CUST006',
+                'nama' => 'Maya Sari',
                 'golongan_id' => 2, // Bronze
-                'no_telp' => '081234567890',
-                'alamat' => 'Jl. Merdeka No. 123',
+                'no_telp' => '081333344455',
+                'alamat' => 'Jl. Mawar No. 56',
             ],
             [
-                'kode_pelanggan' => 'CUST002',
-                'nama' => 'Sari Indah',
+                'kode_pelanggan' => 'CUST007',
+                'nama' => 'Hendra Wijaya',
+                'golongan_id' => 2, // Bronze
+                'no_telp' => '081344455566',
+                'alamat' => 'Jl. Kenanga No. 78',
+            ],
+            [
+                'kode_pelanggan' => 'CUST008',
+                'nama' => 'Linda Hartati',
                 'golongan_id' => 3, // Silver
-                'no_telp' => '081298765432',
-                'alamat' => 'Jl. Sudirman No. 45',
+                'no_telp' => '081355566677',
+                'alamat' => 'Jl. Flamboyan No. 90',
             ],
             [
-                'kode_pelanggan' => 'CUST003',
-                'nama' => 'Ahmad Wijaya',
+                'kode_pelanggan' => 'CUST009',
+                'nama' => 'Fajar Nugroho',
                 'golongan_id' => 4, // Gold
-                'no_telp' => '081277788899',
-                'alamat' => 'Jl. Gatot Subroto No. 67',
+                'no_telp' => '081366677788',
+                'alamat' => 'Jl. Bougenville No. 11',
+            ],
+            [
+                'kode_pelanggan' => 'CUST010',
+                'nama' => 'Siti Rahayu',
+                'golongan_id' => 4, // Gold
+                'no_telp' => '081377788899',
+                'alamat' => 'Jl. Kamboja No. 22',
             ],
         ];
 

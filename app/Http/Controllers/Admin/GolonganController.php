@@ -10,7 +10,7 @@ class GolonganController extends Controller
 {
     public function index()
     {
-        $golongans = Golongan::orderBy('diskon_persen', 'desc')->get();
+        $golongans = Golongan::withCount('pelanggans')->orderBy('diskon_persen', 'desc')->get();
         return view('admin.golongan.index', compact('golongans'));
     }
 
@@ -54,6 +54,12 @@ class GolonganController extends Controller
 
     public function destroy(Golongan $golongan)
     {
+        // Check if golongan has pelanggans
+        if ($golongan->pelanggans()->count() > 0) {
+            return redirect()->route('admin.golongan.index')
+                ->with('error', 'Tidak dapat menghapus golongan yang masih memiliki member.');
+        }
+
         $golongan->delete();
 
         return redirect()->route('admin.golongan.index')

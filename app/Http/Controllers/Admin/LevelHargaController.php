@@ -132,4 +132,16 @@ class LevelHargaController extends Controller
 
         return redirect()->back()->with('success', 'Level harga golongan berhasil dihapus.');
     }
+    // Show edit form for quantity level
+    public function editQuantity(LevelHargaQuantity $levelHargaQuantity)
+    {
+        return response()->json($levelHargaQuantity);
+    }
+
+    // Show edit form for golongan level  
+    public function editGolongan(LevelHargaGolongan $levelHargaGolongan)
+    {
+        $levelHargaGolongan->load('golongan');
+        return response()->json($levelHargaGolongan);
+    }
 }
