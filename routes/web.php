@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\ProdukController as AdminProduk;
+use App\Http\Controllers\Admin\StokBarangController ;
 use App\Http\Controllers\Admin\GolonganController as AdminGolongan;
 use App\Http\Controllers\Admin\PelangganController as AdminPelanggan;
 use App\Http\Controllers\Admin\LevelHargaController as AdminLevelHarga;
@@ -45,6 +46,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::post('/golongan', [AdminLevelHarga::class, 'storeGolongan'])->name('store-golongan');
         Route::put('/golongan/{levelHargaGolongan}', [AdminLevelHarga::class, 'updateGolongan'])->name('update-golongan');
         Route::delete('/golongan/{levelHargaGolongan}', [AdminLevelHarga::class, 'destroyGolongan'])->name('destroy-golongan');
+    });
+    Route::prefix('admin/stok-barang')->name('admin.stok-barang.')->group(function () {
+        Route::get('/', [StokBarangController::class, 'index'])->name('index');
+        Route::get('/export', [StokBarangController::class, 'export'])->name('export');
+        Route::get('/produk/{produk}', [StokBarangController::class, 'show'])->name('show');
+        Route::get('/adjustment', [StokBarangController::class, 'createAdjustment'])->name('create-adjustment');
+        Route::post('/adjustment', [StokBarangController::class, 'storeAdjustment'])->name('store-adjustment');
     });
 });
 

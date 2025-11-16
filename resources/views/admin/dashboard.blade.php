@@ -47,6 +47,11 @@
                         <i class="fas fa-box mr-3"></i>
                         Manajemen Produk
                     </a>
+                    <a href="{{ route('admin.stok-barang.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-user-friends mr-3"></i>
+                        Stok Barang
+                    </a>
                     <a href="{{ route('admin.level-harga.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-tags mr-3"></i>
