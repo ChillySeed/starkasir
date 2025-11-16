@@ -9,6 +9,7 @@ use App\Models\Pelanggan;
 use App\Models\Golongan;
 use App\Models\Transaksi;
 use App\Models\DetailTransaksi;
+use App\Models\StokBarang;
 use Illuminate\Support\Facades\DB;
 
 class PosController extends Controller
@@ -51,16 +52,9 @@ class PosController extends Controller
             $total_diskon = 0;
             $items = $request->items;
             
-            // Get pelanggan diskon
-            $diskon_persen = 0;
-            if ($request->pelanggan_id) {
-                $pelanggan = Pelanggan::with('golongan')->find($request->pelanggan_id);
-                $diskon_persen = $pelanggan->golongan->diskon_persen ?? 0;
-            }
-
             foreach ($items as $item) {
                 $produk = Produk::find($item['produk_id']);
-    
+                
                 // Start with base price
                 $hargaSatuan = $produk->harga_dasar;
                 
@@ -75,7 +69,7 @@ class PosController extends Controller
                     $pelanggan = Pelanggan::with('golongan')->find($request->pelanggan_id);
                     $hargaGolongan = $produk->getHargaBerdasarkanGolongan($pelanggan->golongan_id);
                     
-                    // Use the lowest price between all available pricing
+                    // Use the lower price between all available pricing
                     if ($hargaGolongan < $hargaSatuan) {
                         $hargaSatuan = $hargaGolongan;
                     }
@@ -121,21 +115,50 @@ class PosController extends Controller
             // Create transaction details and update stock
             foreach ($items as $item) {
                 $produk = Produk::find($item['produk_id']);
-                $subtotal = $produk->harga_dasar * $item['qty'];
-                $diskon_item = ($subtotal * $diskon_persen) / 100;
+                
+                // Recalculate price for each item (same logic as above)
+                $hargaSatuan = $produk->harga_dasar;
+                $hargaQuantity = $produk->getHargaBerdasarkanQuantity($item['qty']);
+                if ($hargaQuantity < $hargaSatuan) {
+                    $hargaSatuan = $hargaQuantity;
+                }
+                
+                $diskonPersen = 0;
+                if ($request->pelanggan_id) {
+                    $pelanggan = Pelanggan::with('golongan')->find($request->pelanggan_id);
+                    $hargaGolongan = $produk->getHargaBerdasarkanGolongan($pelanggan->golongan_id);
+                    
+                    if ($hargaGolongan < $hargaSatuan) {
+                        $hargaSatuan = $hargaGolongan;
+                    }
+                    
+                    $diskonPersen = $pelanggan->golongan->diskon_persen;
+                }
+
+                $subtotal = $hargaSatuan * $item['qty'];
+                $diskonItem = ($subtotal * $diskonPersen) / 100;
 
                 DetailTransaksi::create([
                     'transaksi_id' => $transaksi->id,
                     'produk_id' => $item['produk_id'],
                     'qty' => $item['qty'],
-                    'harga_satuan' => $produk->harga_dasar,
-                    'diskon_persen' => $diskon_persen,
-                    'diskon_amount' => $diskon_item,
-                    'subtotal' => $subtotal - $diskon_item,
+                    'harga_satuan' => $hargaSatuan,
+                    'diskon_persen' => $diskonPersen,
+                    'diskon_amount' => $diskonItem,
+                    'subtotal' => $subtotal - $diskonItem,
                 ]);
 
                 // Update product stock
                 $produk->decrement('stok_sekarang', $item['qty']);
+
+                // Record stock movement
+                StokBarang::recordMovement(
+                    $item['produk_id'],
+                    'penjualan',
+                    $item['qty'],
+                    "Penjualan transaksi {$transaksi->kode_transaksi}",
+                    $transaksi->id
+                );
             }
 
             // Update pelanggan stats
@@ -160,13 +183,6 @@ class PosController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
-        StokBarang::recordMovement(
-            $item['produk_id'],
-            'penjualan',
-            $item['qty'],
-            "Penjualan transaksi {$transaksi->kode_transaksi}",
-            $transaksi->id
-        );
     }
 
     public function riwayatTransaksi()

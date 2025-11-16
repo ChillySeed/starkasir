@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\ProdukController as AdminProduk;
 use App\Http\Controllers\Admin\GolonganController as AdminGolongan;
 use App\Http\Controllers\Admin\PelangganController as AdminPelanggan;
+use App\Http\Controllers\Admin\LevelHargaController as AdminLevelHarga;
 use App\Http\Controllers\Kasir\PosController as KasirPos;
 
 // Authentication Routes
@@ -29,6 +30,22 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     
     // Pelanggan Routes
     Route::resource('pelanggan', AdminPelanggan::class)->names('admin.pelanggan');
+    
+    // Level Harga Routes - FIXED: Add 'admin.' prefix to route names
+    Route::prefix('level-harga')->name('admin.level-harga.')->group(function () {
+        Route::get('/', [AdminLevelHarga::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminLevelHarga::class, 'show'])->name('show');
+        
+        // Quantity routes
+        Route::post('/quantity', [AdminLevelHarga::class, 'storeQuantity'])->name('store-quantity');
+        Route::put('/quantity/{levelHargaQuantity}', [AdminLevelHarga::class, 'updateQuantity'])->name('update-quantity');
+        Route::delete('/quantity/{levelHargaQuantity}', [AdminLevelHarga::class, 'destroyQuantity'])->name('destroy-quantity');
+        
+        // Golongan routes
+        Route::post('/golongan', [AdminLevelHarga::class, 'storeGolongan'])->name('store-golongan');
+        Route::put('/golongan/{levelHargaGolongan}', [AdminLevelHarga::class, 'updateGolongan'])->name('update-golongan');
+        Route::delete('/golongan/{levelHargaGolongan}', [AdminLevelHarga::class, 'destroyGolongan'])->name('destroy-golongan');
+    });
 });
 
 // Kasir Routes
@@ -38,20 +55,4 @@ Route::prefix('kasir')->middleware(['auth', 'kasir'])->group(function () {
     Route::post('/transaksi', [KasirPos::class, 'storeTransaksi'])->name('kasir.store-transaksi');
     Route::get('/riwayat', [KasirPos::class, 'riwayatTransaksi'])->name('kasir.riwayat');
     Route::get('/transaksi/{transaksi}', [KasirPos::class, 'showTransaksi'])->name('kasir.show-transaksi');
-});
-
-// Level Harga Routes
-Route::prefix('admin/level-harga')->name('admin.level-harga.')->group(function () {
-    Route::get('/', [LevelHargaController::class, 'index'])->name('index');
-    Route::get('/{id}', [LevelHargaController::class, 'show'])->name('show');
-    
-    // Quantity routes
-    Route::post('/quantity', [LevelHargaController::class, 'storeQuantity'])->name('store-quantity');
-    Route::put('/quantity/{levelHargaQuantity}', [LevelHargaController::class, 'updateQuantity'])->name('update-quantity');
-    Route::delete('/quantity/{levelHargaQuantity}', [LevelHargaController::class, 'destroyQuantity'])->name('destroy-quantity');
-    
-    // Golongan routes
-    Route::post('/golongan', [LevelHargaController::class, 'storeGolongan'])->name('store-golongan');
-    Route::put('/golongan/{levelHargaGolongan}', [LevelHargaController::class, 'updateGolongan'])->name('update-golongan');
-    Route::delete('/golongan/{levelHargaGolongan}', [LevelHargaController::class, 'destroyGolongan'])->name('destroy-golongan');
 });

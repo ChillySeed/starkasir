@@ -142,24 +142,13 @@
                                     @if($level->keterangan)
                                     <p class="text-sm text-gray-500">{{ $level->keterangan }}</p>
                                     @endif
-                                    <span class="inline-block mt-1 px-2 py-1 text-xs rounded {{ $level->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $level->is_active ? 'Aktif' : 'Nonaktif' }}
-                                    </span>
                                 </div>
                                 <div class="flex space-x-2">
-                                    <form method="POST" action="{{ route('admin.level-harga.update-quantity', $level->id) }}" class="inline">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="is_active" value="{{ $level->is_active ? 0 : 1 }}">
-                                        <button type="submit" class="text-sm {{ $level->is_active ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800' }}">
-                                            {{ $level->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                        </button>
-                                    </form>
                                     <form method="POST" action="{{ route('admin.level-harga.destroy-quantity', $level->id) }}" class="inline" onsubmit="return confirm('Hapus level harga ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
-                                            Hapus
+                                            <i class="fas fa-trash"></i> Hapus
                                         </button>
                                     </form>
                                 </div>
@@ -224,24 +213,13 @@
                                     @if($level->keterangan)
                                     <p class="text-sm text-gray-500">{{ $level->keterangan }}</p>
                                     @endif
-                                    <span class="inline-block mt-1 px-2 py-1 text-xs rounded {{ $level->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $level->is_active ? 'Aktif' : 'Nonaktif' }}
-                                    </span>
                                 </div>
                                 <div class="flex space-x-2">
-                                    <form method="POST" action="{{ route('admin.level-harga.update-golongan', $level->id) }}" class="inline">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="is_active" value="{{ $level->is_active ? 0 : 1 }}">
-                                        <button type="submit" class="text-sm {{ $level->is_active ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800' }}">
-                                            {{ $level->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                        </button>
-                                    </form>
                                     <form method="POST" action="{{ route('admin.level-harga.destroy-golongan', $level->id) }}" class="inline" onsubmit="return confirm('Hapus level harga ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
-                                            Hapus
+                                            <i class="fas fa-trash"></i> Hapus
                                         </button>
                                     </form>
                                 </div>
@@ -273,14 +251,14 @@
                         <div>
                             <h4 class="font-medium mb-3">Harga Berdasarkan Quantity</h4>
                             <div class="space-y-2">
-                                @foreach($produk->levelHargaQuantities->where('is_active', true)->sortBy('qty_min') as $level)
+                                @foreach($produk->levelHargaQuantities->sortBy('qty_min') as $level)
                                 <div class="flex justify-between text-sm">
                                     <span>{{ $level->range_description }}</span>
                                     <span class="font-medium text-green-600">Rp {{ number_format($level->harga_khusus, 0, ',', '.') }}</span>
                                 </div>
                                 @endforeach
-                                @if($produk->levelHargaQuantities->where('is_active', true)->isEmpty())
-                                <p class="text-sm text-gray-500">Tidak ada level harga quantity aktif</p>
+                                @if($produk->levelHargaQuantities->isEmpty())
+                                <p class="text-sm text-gray-500">Tidak ada level harga quantity</p>
                                 @endif
                             </div>
                         </div>
@@ -289,14 +267,14 @@
                         <div>
                             <h4 class="font-medium mb-3">Harga Berdasarkan Golongan</h4>
                             <div class="space-y-2">
-                                @foreach($produk->levelHargaGolongans->where('is_active', true) as $level)
+                                @foreach($produk->levelHargaGolongans as $level)
                                 <div class="flex justify-between text-sm">
                                     <span>{{ $level->golongan->nama_tier }}</span>
                                     <span class="font-medium text-green-600">Rp {{ number_format($level->harga_khusus, 0, ',', '.') }}</span>
                                 </div>
                                 @endforeach
-                                @if($produk->levelHargaGolongans->where('is_active', true)->isEmpty())
-                                <p class="text-sm text-gray-500">Tidak ada level harga golongan aktif</p>
+                                @if($produk->levelHargaGolongans->isEmpty())
+                                <p class="text-sm text-gray-500">Tidak ada level harga golongan</p>
                                 @endif
                             </div>
                         </div>

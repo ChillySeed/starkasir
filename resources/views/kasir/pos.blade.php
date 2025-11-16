@@ -49,20 +49,30 @@
                     <!-- Product Grid -->
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
                         @foreach($produks as $produk)
-                        
-
                         <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-purple-50 transition-colors product-item"
                             data-produk-id="{{ $produk->id }}"
                             data-nama="{{ $produk->nama_produk }}"
                             data-harga="{{ $produk->harga_dasar }}"
                             data-stok="{{ $produk->stok_sekarang }}"
-                            data-gambar="{{ $produk->gambar_url }}">
+                            data-gambar="{{ $produk->gambar_url }}"
+                            data-quantity-prices="{{ $produk->levelHargaQuantities->where('is_active', true)->toJson() }}"
+                            data-golongan-prices="{{ $produk->levelHargaGolongans->where('is_active', true)->toJson() }}">
                             <div class="text-center">
                                 <img src="{{ $produk->gambar_url }}" alt="{{ $produk->nama_produk }}" 
                                     class="w-16 h-16 mx-auto rounded-lg object-cover mb-2">
                                 <h3 class="font-semibold text-sm text-gray-900">{{ $produk->nama_produk }}</h3>
                                 <p class="text-green-600 font-bold text-sm">Rp {{ number_format($produk->harga_dasar, 0, ',', '.') }}</p>
                                 <p class="text-xs text-gray-500">Stok: {{ $produk->stok_sekarang }} {{ $produk->satuan }}</p>
+                                @if($produk->levelHargaQuantities->where('is_active', true)->count() > 0)
+                                <p class="text-xs text-blue-600 mt-1">
+                                    <i class="fas fa-tag mr-1"></i>Harga quantity tersedia
+                                </p>
+                                @endif
+                                @if($produk->levelHargaGolongans->where('is_active', true)->count() > 0)
+                                <p class="text-xs text-purple-600 mt-1">
+                                    <i class="fas fa-crown mr-1"></i>Harga member tersedia
+                                </p>
+                                @endif
                             </div>
                         </div>
                         @endforeach
@@ -81,7 +91,9 @@
                         <select id="pelangganSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
                             <option value="">Umum (Non-Member)</option>
                             @foreach($pelanggans as $pelanggan)
-                            <option value="{{ $pelanggan->id }}" data-diskon="{{ $pelanggan->golongan->diskon_persen ?? 0 }}">
+                            <option value="{{ $pelanggan->id }}" 
+                                data-diskon="{{ $pelanggan->golongan->diskon_persen ?? 0 }}"
+                                data-golongan-id="{{ $pelanggan->golongan_id }}">
                                 {{ $pelanggan->nama }} - {{ $pelanggan->golongan->nama_tier }} ({{ $pelanggan->golongan->diskon_persen }}%)
                             </option>
                             @endforeach
@@ -122,6 +134,14 @@
                         <div class="flex justify-between font-bold text-lg border-t pt-2">
                             <span>Total:</span>
                             <span id="totalAmount">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Applied Pricing Info -->
+                    <div id="pricingInfo" class="mb-4 p-3 bg-blue-50 rounded-lg hidden">
+                        <h4 class="font-medium text-blue-900 text-sm mb-2">Info Harga Terpakai:</h4>
+                        <div id="pricingDetails" class="text-xs text-blue-800 space-y-1">
+                            <!-- Pricing details will be shown here -->
                         </div>
                     </div>
 
@@ -200,12 +220,16 @@
             const productName = $(this).data('nama');
             const productPrice = $(this).data('harga');
             const productStock = $(this).data('stok');
+            const quantityPrices = $(this).data('quantity-prices');
+            const golonganPrices = $(this).data('golongan-prices');
             
             currentProduct = {
                 id: productId,
                 name: productName,
                 price: parseFloat(productPrice),
-                stock: parseInt(productStock)
+                stock: parseInt(productStock),
+                quantityPrices: quantityPrices || [],
+                golonganPrices: golonganPrices || []
             };
 
             $('#modalProductName').text(productName);
@@ -214,14 +238,76 @@
             $('#quantityModal').removeClass('hidden').addClass('flex');
         });
 
+        // Get best price based on quantity
+        function getQuantityPrice(product, quantity) {
+            let bestPrice = product.price;
+            let priceType = 'Reguler';
+
+            // Check quantity-based pricing
+            for (const priceRule of product.quantityPrices) {
+                const min = priceRule.qty_min;
+                const max = priceRule.qty_max;
+                const price = parseFloat(priceRule.harga_khusus);
+                
+                if (quantity >= min && (max === null || quantity <= max)) {
+                    if (price < bestPrice) {
+                        bestPrice = price;
+                        priceType = `Quantity (${min}+)`;
+                    }
+                }
+            }
+
+            return { price: bestPrice, type: priceType };
+        }
+
+        // Get best price based on golongan
+        function getGolonganPrice(product, golonganId) {
+            let bestPrice = product.price;
+            let priceType = 'Reguler';
+
+            // Check golongan-based pricing
+            for (const priceRule of product.golonganPrices) {
+                if (parseInt(priceRule.golongan_id) === parseInt(golonganId)) {
+                    const price = parseFloat(priceRule.harga_khusus);
+                    if (price < bestPrice) {
+                        bestPrice = price;
+                        priceType = 'Member Special';
+                    }
+                }
+            }
+
+            return { price: bestPrice, type: priceType };
+        }
+
+        // Get the best available price
+        function getBestPrice(product, quantity, golonganId) {
+            const quantityPrice = getQuantityPrice(product, quantity);
+            let bestPrice = quantityPrice;
+            
+            // If golongan is selected, check golongan pricing
+            if (golonganId) {
+                const golonganPrice = getGolonganPrice(product, golonganId);
+                if (golonganPrice.price < bestPrice.price) {
+                    bestPrice = golonganPrice;
+                }
+            }
+
+            return bestPrice;
+        }
+
         // Add to cart
         $('#addToCart').click(function() {
             const quantity = parseInt($('#quantityInput').val());
+            const golonganSelect = $('#pelangganSelect');
+            const golonganId = golonganSelect.val() ? golonganSelect.find(':selected').data('golongan-id') : null;
             
             if (quantity < 1 || quantity > currentProduct.stock) {
                 alert('Jumlah tidak valid!');
                 return;
             }
+
+            // Calculate the best price
+            const bestPrice = getBestPrice(currentProduct, quantity, golonganId);
 
             // Check if product already in cart
             const existingItem = cart.find(item => item.id === currentProduct.id);
@@ -232,12 +318,16 @@
                     return;
                 }
                 existingItem.quantity += quantity;
-                existingItem.subtotal = existingItem.quantity * existingItem.price;
+                existingItem.appliedPrice = bestPrice.price;
+                existingItem.priceType = bestPrice.type;
+                existingItem.subtotal = existingItem.quantity * existingItem.appliedPrice;
             } else {
                 cart.push({
                     ...currentProduct,
                     quantity: quantity,
-                    subtotal: quantity * currentProduct.price
+                    appliedPrice: bestPrice.price,
+                    priceType: bestPrice.type,
+                    subtotal: quantity * bestPrice.price
                 });
             }
 
@@ -257,6 +347,8 @@
             const productId = $(this).data('id');
             const newQuantity = parseInt($(this).val());
             const item = cart.find(item => item.id === productId);
+            const golonganSelect = $('#pelangganSelect');
+            const golonganId = golonganSelect.val() ? golonganSelect.find(':selected').data('golongan-id') : null;
             
             if (newQuantity < 1) {
                 cart = cart.filter(item => item.id !== productId);
@@ -265,8 +357,12 @@
                 $(this).val(item.quantity);
                 return;
             } else {
+                // Recalculate price for new quantity
+                const bestPrice = getBestPrice(item, newQuantity, golonganId);
                 item.quantity = newQuantity;
-                item.subtotal = newQuantity * item.price;
+                item.appliedPrice = bestPrice.price;
+                item.priceType = bestPrice.type;
+                item.subtotal = newQuantity * bestPrice.price;
             }
             
             updateCartDisplay();
@@ -329,6 +425,7 @@
                         updateCartDisplay();
                         $('#amountPaid').val('');
                         $('#pelangganSelect').val('');
+                        $('#pricingInfo').addClass('hidden');
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -345,22 +442,32 @@
             const cartItems = $('#cartItems');
             const emptyCart = $('#emptyCart');
             const checkoutBtn = $('#checkoutBtn');
+            const pricingInfo = $('#pricingInfo');
 
             if (cart.length === 0) {
                 cartItems.empty();
                 emptyCart.show();
                 checkoutBtn.prop('disabled', true);
+                pricingInfo.addClass('hidden');
             } else {
                 emptyCart.hide();
                 checkoutBtn.prop('disabled', false);
                 
                 cartItems.empty();
+                let hasSpecialPricing = false;
+                const pricingDetails = [];
+
                 cart.forEach(item => {
+                    const priceBadge = item.priceType !== 'Reguler' ? 
+                        `<span class="text-xs text-green-600 ml-1">(${item.priceType})</span>` : '';
+
                     const row = `
                         <tr class="border-b">
                             <td class="px-3 py-2">
                                 <div class="text-sm font-medium text-gray-900">${item.name}</div>
-                                <div class="text-sm text-gray-500">Rp ${formatNumber(item.price)}</div>
+                                <div class="text-sm text-gray-500">
+                                    Rp ${formatNumber(item.appliedPrice)}${priceBadge}
+                                </div>
                             </td>
                             <td class="px-3 py-2 text-right">
                                 <input type="number" class="item-quantity w-16 text-right border rounded px-1 py-1 text-sm" 
@@ -377,7 +484,26 @@
                         </tr>
                     `;
                     cartItems.append(row);
+
+                    // Collect pricing info for special pricing
+                    if (item.priceType !== 'Reguler') {
+                        hasSpecialPricing = true;
+                        if (!pricingDetails.includes(item.priceType)) {
+                            pricingDetails.push(item.priceType);
+                        }
+                    }
                 });
+
+                // Show pricing info if there are special prices
+                if (hasSpecialPricing) {
+                    const pricingInfoHtml = pricingDetails.map(detail => 
+                        `<div><i class="fas fa-check text-green-500 mr-1"></i>${detail}</div>`
+                    ).join('');
+                    $('#pricingDetails').html(pricingInfoHtml);
+                    pricingInfo.removeClass('hidden');
+                } else {
+                    pricingInfo.addClass('hidden');
+                }
             }
 
             calculateTotals();
@@ -430,8 +556,19 @@
             $('#quantityModal').removeClass('flex').addClass('hidden');
         });
 
+        // Update prices when customer changes
         $('#pelangganSelect').change(function() {
-            calculateTotals();
+            // Recalculate all item prices with new golongan
+            const golonganId = $(this).val() ? $(this).find(':selected').data('golongan-id') : null;
+            
+            cart.forEach(item => {
+                const bestPrice = getBestPrice(item, item.quantity, golonganId);
+                item.appliedPrice = bestPrice.price;
+                item.priceType = bestPrice.type;
+                item.subtotal = item.quantity * bestPrice.price;
+            });
+            
+            updateCartDisplay();
         });
 
         // Search functionality
