@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100">
+<body class="background-color: #2f3136;">
     <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div class="max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg" style="background-color: #FFDB58;">
             <div class="text-center">
                 <h2 class="text-3xl font-bold text-gray-900">POS System</h2>
                 <p class="mt-2 text-gray-600">Sistem Kasir Terintegrasi</p>
