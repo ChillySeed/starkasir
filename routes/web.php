@@ -63,4 +63,7 @@ Route::prefix('kasir')->middleware(['auth', 'kasir'])->group(function () {
     Route::post('/transaksi', [KasirPos::class, 'storeTransaksi'])->name('kasir.store-transaksi');
     Route::get('/riwayat', [KasirPos::class, 'riwayatTransaksi'])->name('kasir.riwayat');
     Route::get('/transaksi/{transaksi}', [KasirPos::class, 'showTransaksi'])->name('kasir.show-transaksi');
+    
+    // --- Route ini ditambahkan dari file Anda ---
+    Route::get('/transaksi-json/{transaksi}', [KasirPos::class, 'getTransaksiJson'])->name('kasir.transaksi-json');
 });
