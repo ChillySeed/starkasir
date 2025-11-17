@@ -36,7 +36,7 @@
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
                     <a href="{{ route('admin.dashboard') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard
                     </a>
@@ -44,6 +44,11 @@
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-box mr-3"></i>
                         Manajemen Produk
+                    </a>
+                    <a href="{{ route('admin.stok-barang.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-warehouse mr-3"></i>
+                        Riwayat Stok
                     </a>
                     <a href="{{ route('admin.level-harga.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
@@ -56,9 +61,14 @@
                         Golongan Member
                     </a>
                     <a href="{{ route('admin.pelanggan.index') }}" 
-                        class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-user-friends mr-3"></i>
                         Data Pelanggan
+                    </a>
+                    <a href="#" 
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        Laporan
                     </a>
                 </div>
             </nav>
