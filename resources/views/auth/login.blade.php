@@ -48,19 +48,6 @@
                 </div>
             </form>
 
-            <div class="mt-6 grid grid-cols-2 gap-4">
-                <a href="{{ route('quick-login', 'admin') }}" 
-                    class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                    <i class="fas fa-user-shield mr-2"></i>
-                    Login sebagai Admin
-                </a>
-                <a href="{{ route('quick-login', 'kasir') }}" 
-                    class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-                    <i class="fas fa-cash-register mr-2"></i>
-                    Login sebagai Kasir
-                </a>
-            </div>
-
             <div class="mt-4 text-center text-sm text-gray-500">
                 <p>Demo: Klik tombol di atas untuk login cepat</p>
                 <p class="mt-1">Username: admin/kasir | Password: password</p>
