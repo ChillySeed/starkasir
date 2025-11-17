@@ -49,7 +49,6 @@
             </form>
 
             <div class="mt-4 text-center text-sm text-gray-500">
-                <p>Demo: Klik tombol di atas untuk login cepat</p>
                 <p class="mt-1">Username: admin/kasir | Password: password</p>
             </div>
         </div>
