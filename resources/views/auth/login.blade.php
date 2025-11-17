@@ -22,6 +22,21 @@
         .rounded-pill { border-radius: 12px; }
         .big-pill { border-radius: 9999px; padding: 16px 36px; }
         a.accent-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+        
+        /* Placeholder color */
+        input::placeholder {
+            color: #b1b1b1; /* make placeholder more visible */
+        }
+        
+        /* Dark text for input */
+        input {
+            color: #333; /* Dark text for input */
+        }
+
+        /* Ensure text is dark even when input is active or has focus */
+        input:focus, input:not(:focus):valid {
+            color: #333; /* Dark text when focused or when valid */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -51,6 +66,7 @@
                         <div class="relative">
                             <i class="fa-solid fa-user input-icon absolute left-3 top-1/2 -translate-y-1/2"></i>
                             <input id="username" name="username" type="text" required 
+                                placeholder="Masukkan username"
                                 class="pl-12 block w-full px-4 py-3 field-bg rounded-pill focus:outline-none focus:ring-2 focus:ring-yellow-300"/>
                         </div>
                     </div>
@@ -62,16 +78,9 @@
                         <div class="relative">
                             <i class="fa-solid fa-lock input-icon absolute left-3 top-1/2 -translate-y-1/2"></i>
                             <input id="password" name="password" type="password" required 
+                                placeholder="Masukkan password"
                                 class="pl-12 block w-full px-4 py-3 field-bg rounded-pill focus:outline-none focus:ring-2 focus:ring-yellow-300"/>
                         </div>
-                    </div>
-
-                    <div class="text-right">
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="text-sm accent-link">Lupa Password?</a>
-                        @else
-                            <span class="text-sm accent-link">Lupa Password?</span>
-                        @endif
                     </div>
                 </div>
 
@@ -81,16 +90,6 @@
                     </button>
                 </div>
             </form>
-
-            <div class="mt-6 text-center text-sm text-gray-300">
-                <p>Belum punya akun?
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="accent-link font-semibold">Daftar</a>
-                    @else
-                        <span class="accent-link font-semibold">Daftar</span>
-                    @endif
-                </p>
-            </div>
         </div>
     </div>
 </body>
