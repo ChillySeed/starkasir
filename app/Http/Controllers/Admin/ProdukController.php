@@ -35,6 +35,7 @@ class ProdukController extends Controller
 
         $data = $request->except('gambar');
         $data['stok_sekarang'] = $request->stok_awal;
+        $data['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('gambar')) {
             $image = $request->file('gambar');
@@ -51,6 +52,7 @@ class ProdukController extends Controller
 
     public function show(Produk $produk)
     {
+        $produk->load(['levelHargaQuantities', 'levelHargaGolongans.golongan']);
         return view('admin.produk.show', compact('produk'));
     }
 
@@ -72,6 +74,7 @@ class ProdukController extends Controller
         ]);
 
         $data = $request->except('gambar');
+        $data['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('gambar')) {
             // Delete old image
