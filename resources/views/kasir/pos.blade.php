@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body class="bg-gray-100">
+<body style="background-color: #2f3136;">
     <!-- Navigation -->
-    <nav class="bg-purple-600 text-white shadow-lg">
+    <nav class="text-white shadow-lg" style="background-color: #FFDB58;">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-4">
@@ -18,13 +18,13 @@
                     <span class="text-xl font-bold">POS System - Kasir</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('kasir.riwayat') }}" class="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded-lg">
+                    <a href="{{ route('kasir.riwayat') }}" class="px-4 py-2 rounded-lg" style="background-color: #2f3136; hover-bg color: #2f3136">
                         <i class="fas fa-history mr-2"></i>Riwayat
                     </a>
                     <span>Halo, {{ auth()->user()->nama }}</span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded-lg">
+                        <button type="submit" class="px-4 py-2 rounded-lg" style="background-color: #2f3136; hover-bg color: #2f3136">
                             <i class="fas fa-sign-out-alt mr-2"></i>Logout
                         </button>
                     </form>
