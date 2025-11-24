@@ -10,12 +10,91 @@ use Illuminate\Support\Str;
 
 class ProdukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Produk::query();
 
-        $produks = Produk::orderBy('nama_produk')->paginate(3000);
-        return view('admin.produk.index', compact('produks'));
+        // Search functionality
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                  ->orWhere('kode_produk', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status) {
+            if ($request->status == 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status == 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        // Filter by stock status
+        if ($request->has('stock_status') && $request->stock_status) {
+            switch ($request->stock_status) {
+                case 'in_stock':
+                    $query->where('stok_sekarang', '>', 0);
+                    break;
+                case 'low_stock':
+                    $query->where('stok_sekarang', '>', 0)
+                          ->where('stok_sekarang', '<', 10);
+                    break;
+                case 'out_of_stock':
+                    $query->where('stok_sekarang', '<=', 0);
+                    break;
+                case 'high_stock':
+                    $query->where('stok_sekarang', '>=', 50);
+                    break;
+            }
+        }
+
+        // Filter by unit
+        if ($request->has('satuan') && $request->satuan) {
+            $query->where('satuan', $request->satuan);
+        }
+
+        // Sort options
+        $sortOptions = [
+            'nama_asc' => ['nama_produk', 'asc'],
+            'nama_desc' => ['nama_produk', 'desc'],
+            'harga_asc' => ['harga_dasar', 'asc'],
+            'harga_desc' => ['harga_dasar', 'desc'],
+            'stok_asc' => ['stok_sekarang', 'asc'],
+            'stok_desc' => ['stok_sekarang', 'desc'],
+            'terbaru' => ['created_at', 'desc'],
+            'terlama' => ['created_at', 'asc'],
+        ];
+
+        $sort = $request->get('sort', 'nama_asc');
+        if (array_key_exists($sort, $sortOptions)) {
+            $query->orderBy($sortOptions[$sort][0], $sortOptions[$sort][1]);
+        } else {
+            $query->orderBy('nama_produk', 'asc');
+        }
+
+        $produks = $query->paginate(20)->withQueryString();
+
+        // Get data for alerts (across all products, not just current page)
+        $allProduks = Produk::all();
+        $lowStockProducts = $allProduks->where('stok_sekarang', '<', 10)->where('stok_sekarang', '>', 0);
+        $outOfStockProducts = $allProduks->where('stok_sekarang', '<=', 0);
+        $inactiveProducts = $allProduks->where('is_active', false);
+
+        $availableUnits = Produk::distinct()->pluck('satuan')->filter();
+
+        return view('admin.produk.index', compact(
+            'produks', 
+            'lowStockProducts',
+            'outOfStockProducts',
+            'inactiveProducts',
+            'availableUnits'
+        ));
     }
+
 
     public function create()
     {
