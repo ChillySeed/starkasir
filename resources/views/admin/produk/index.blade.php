@@ -45,6 +45,11 @@
                         <i class="fas fa-box mr-3"></i>
                         Manajemen Produk
                     </a>
+                    <a href="{{ route('admin.stok-barang.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-warehouse mr-3"></i>
+                        Riwayat Stok
+                    </a>
                     <a href="{{ route('admin.level-harga.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-tags mr-3"></i>
@@ -60,10 +65,10 @@
                         <i class="fas fa-user-friends mr-3"></i>
                         Data Pelanggan
                     </a>
-                    <a href="{{ route('admin.stok-barang.index') }}" 
+                    <a href="{{ route('admin.laporan.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-warehouse mr-3"></i>
-                        Riwayat Stok
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        Laporan
                     </a>
                 </div>
             </nav>

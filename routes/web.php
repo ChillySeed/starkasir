@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\GolonganController as AdminGolongan;
 use App\Http\Controllers\Admin\PelangganController as AdminPelanggan;
 use App\Http\Controllers\Admin\LevelHargaController as AdminLevelHarga;
 use App\Http\Controllers\Kasir\PosController as KasirPos;
+use App\Http\Controllers\Admin\LaporanController;
 
 // Authentication Routes
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
@@ -54,6 +55,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/adjustment', [StokBarangController::class, 'createAdjustment'])->name('create-adjustment');
         Route::post('/adjustment', [StokBarangController::class, 'storeAdjustment'])->name('store-adjustment');
     });
+
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('admin.laporan.index');
+
+    Route::get('/laporan/transaksi', [LaporanController::class, 'showTransaksiForm'])
+         ->name('admin.laporan.transaksi.form');
+         
+    Route::get('/laporan/transaksi/hasil', [LaporanController::class, 'generateTransaksi'])
+         ->name('admin.laporan.transaksi.generate');
+
 });
 
 // Kasir Routes

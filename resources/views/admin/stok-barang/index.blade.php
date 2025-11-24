@@ -66,7 +66,7 @@
                         <i class="fas fa-user-friends mr-3"></i>
                         Data Pelanggan
                     </a>
-                    <a href="#" 
+                    <a href="{{ route('admin.laporan.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-chart-bar mr-3"></i>
                         Laporan
