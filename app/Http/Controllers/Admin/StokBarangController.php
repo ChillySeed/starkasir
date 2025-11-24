@@ -37,7 +37,7 @@ class StokBarangController extends Controller
         }
 
         $stokBarangs = $query->orderBy('tanggal_perubahan', 'desc')
-            ->paginate(50);
+            ->paginate(10);
 
         $produks = Produk::where('is_active', true)->orderBy('nama_produk')->get();
         $jenisPerubahan = ['penjualan', 'pembelian', 'adjustment', 'retur'];
@@ -66,7 +66,7 @@ class StokBarangController extends Controller
         }
 
         $stokBarangs = $query->orderBy('tanggal_perubahan', 'desc')
-            ->paginate(50);
+            ->paginate(10);
 
         $totalMasuk = $produk->stokBarangs()
             ->whereBetween('tanggal_perubahan', [$tanggalMulai, $tanggalAkhir])

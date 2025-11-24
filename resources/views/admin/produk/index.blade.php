@@ -65,11 +65,6 @@
                         <i class="fas fa-warehouse mr-3"></i>
                         Riwayat Stok
                     </a>
-                    <a href="#" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        Laporan
-                    </a>
                 </div>
             </nav>
         </div>
@@ -87,10 +82,71 @@
                 </a>
             </div>
 
+            <!-- Alerts Section - MOVED TO TOP -->
             @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {{ session('success') }}
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        {{ session('success') }}
+                    </div>
                 </div>
+            @endif
+
+            @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        {{ session('error') }}
+                    </div>
+                </div>
+            @endif
+
+            <!-- Stock Warnings - MOVED TO TOP -->
+            @php
+                $lowStockProducts = $produks->where('stok_sekarang', '<', 10)->where('stok_sekarang', '>', 0);
+                $outOfStockProducts = $produks->where('stok_sekarang', '<=', 0);
+            @endphp
+
+            @if($lowStockProducts->count() > 0)
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="shrink-0">
+                        <i class="fas fa-exclamation-triangle text-orange-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-orange-800">Peringatan Stok Menipis</h3>
+                        <div class="mt-2 text-sm text-orange-700">
+                            <p>Produk berikut memiliki stok kurang dari 10:</p>
+                            <ul class="list-disc list-inside mt-1">
+                                @foreach($lowStockProducts as $product)
+                                <li>{{ $product->nama_produk }} (Stok: {{ $product->stok_sekarang }})</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($outOfStockProducts->count() > 0)
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="shrink-0">
+                        <i class="fas fa-times-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Peringatan Stok Habis</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Produk berikut stoknya habis:</p>
+                            <ul class="list-disc list-inside mt-1">
+                                @foreach($outOfStockProducts as $product)
+                                <li>{{ $product->nama_produk }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @endif
 
             <!-- Quick Stats -->
@@ -102,7 +158,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm text-gray-500">Total Produk</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $produks->count() }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $produks->total() }}</p>
                         </div>
                     </div>
                 </div>
@@ -124,7 +180,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm text-gray-500">Stok Menipis</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $produks->where('stok_sekarang', '<', 10)->where('stok_sekarang', '>', 0)->count() }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $lowStockProducts->count() }}</p>
                         </div>
                     </div>
                 </div>
@@ -135,7 +191,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm text-gray-500">Stok Habis</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $produks->where('stok_sekarang', '<=', 0)->count() }}</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $outOfStockProducts->count() }}</p>
                         </div>
                     </div>
                 </div>
@@ -143,8 +199,11 @@
 
             <!-- Products Table -->
             <div class="bg-white rounded-lg shadow">
-                <div class="px-6 py-4 border-b border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h2 class="text-lg font-semibold text-gray-900">Daftar Produk</h2>
+                    <div class="text-sm text-gray-500">
+                        Menampilkan {{ $produks->firstItem() }} - {{ $produks->lastItem() }} dari {{ $produks->total() }} produk
+                    </div>
                 </div>
                 <div class="p-6">
                     @if($produks->count() > 0)
@@ -232,6 +291,11 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <div class="mt-6">
+                        {{ $produks->links() }}
+                    </div>
                     @else
                     <div class="text-center py-8">
                         <i class="fas fa-boxes text-4xl text-gray-400 mb-4"></i>
@@ -243,56 +307,6 @@
                     @endif
                 </div>
             </div>
-
-            <!-- Low Stock Warning -->
-            @php
-                $lowStockProducts = $produks->where('stok_sekarang', '<', 10)->where('stok_sekarang', '>', 0);
-            @endphp
-            @if($lowStockProducts->count() > 0)
-            <div class="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <div class="flex">
-                    <div class="shrink-0">
-                        <i class="fas fa-exclamation-triangle text-orange-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-orange-800">Peringatan Stok Menipis</h3>
-                        <div class="mt-2 text-sm text-orange-700">
-                            <p>Produk berikut memiliki stok kurang dari 10:</p>
-                            <ul class="list-disc list-inside mt-1">
-                                @foreach($lowStockProducts as $product)
-                                <li>{{ $product->nama_produk }} (Stok: {{ $product->stok_sekarang }})</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            <!-- Out of Stock Warning -->
-            @php
-                $outOfStockProducts = $produks->where('stok_sekarang', '<=', 0);
-            @endphp
-            @if($outOfStockProducts->count() > 0)
-            <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                <div class="flex">
-                    <div class="shrink-0">
-                        <i class="fas fa-times-circle text-red-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Peringatan Stok Habis</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <p>Produk berikut stoknya habis:</p>
-                            <ul class="list-disc list-inside mt-1">
-                                @foreach($outOfStockProducts as $product)
-                                <li>{{ $product->nama_produk }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 </body>

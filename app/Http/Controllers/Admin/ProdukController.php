@@ -12,7 +12,8 @@ class ProdukController extends Controller
 {
     public function index()
     {
-        $produks = Produk::orderBy('nama_produk')->get();
+
+        $produks = Produk::orderBy('nama_produk')->paginate(3000);
         return view('admin.produk.index', compact('produks'));
     }
 
