@@ -36,12 +36,12 @@
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
                     <a href="{{ route('admin.dashboard') }}" 
-                        class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard
                     </a>
                     <a href="{{ route('admin.produk.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
                         <i class="fas fa-box mr-3"></i>
                         Manajemen Produk
                     </a>
@@ -65,7 +65,7 @@
                         <i class="fas fa-user-friends mr-3"></i>
                         Data Pelanggan
                     </a>
-                    <a href="#" 
+                    <a href="{{ route('admin.laporan.index') }}" 
                         class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-chart-bar mr-3"></i>
                         Laporan
@@ -256,7 +256,7 @@
                 <!-- Danger Zone -->
                 <div class="mt-6 bg-red-50 border border-red-200 rounded-lg">
                     <div class="px-6 py-4 border-b border-red-200">
-                        <h2 class="text-lg font-semibold text-red-800">PERINGATAN</h2>
+                        <h2 class="text-lg font-semibold text-red-800">Zona Berbahaya</h2>
                     </div>
                     <div class="p-6">
                         <p class="text-sm text-red-700 mb-4">
