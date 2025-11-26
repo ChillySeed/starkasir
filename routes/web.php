@@ -7,7 +7,7 @@ use App\Http\Controllers\Admin\StokBarangController ;
 use App\Http\Controllers\Admin\GolonganController as AdminGolongan;
 use App\Http\Controllers\Admin\PelangganController as AdminPelanggan;
 use App\Http\Controllers\Admin\LevelHargaController as AdminLevelHarga;
-use App\Http\Controllers\Kasir\PosController as KasirPos;
+use App\Http\Controllers\Kasir\POSController as KasirPos;
 use App\Http\Controllers\Admin\LaporanController;
 
 // Authentication Routes
