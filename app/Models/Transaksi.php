@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Pelanggan; 
 
 class Transaksi extends Model
 {
@@ -38,6 +39,7 @@ class Transaksi extends Model
 
     public function pelanggan()
     {
+        // Sekarang baris ini akan berfungsi karena Pelanggan::class sudah diimpor di atas
         return $this->belongsTo(Pelanggan::class);
     }
 
@@ -59,6 +61,6 @@ class Transaksi extends Model
             $newNumber = 1;
         }
         
-        return 'TRX-' . $date . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $date . '-TRX-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

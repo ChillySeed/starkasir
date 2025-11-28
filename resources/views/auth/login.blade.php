@@ -6,17 +6,48 @@
     <title>Login - POS System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --card:#373941;       /* dark card background */
+            --accent:#ffd166;     /* yellow accent */
+            --input-bg:#f3f4f6;   /* light input bg */
+        }
+        body{ font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        .card { background: var(--card); color: #fff; }
+        .accent { color: var(--accent); }
+        .accent-bg { background: var(--accent); }
+        .input-icon { color: #fff; opacity: .9; }
+        .field-bg { background: var(--input-bg); }
+        .rounded-pill { border-radius: 12px; }
+        .big-pill { border-radius: 9999px; padding: 16px 36px; }
+        a.accent-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+        
+        /* Placeholder color */
+        input::placeholder {
+            color: #b1b1b1; /* make placeholder more visible */
+        }
+        
+        /* Dark text for input */
+        input {
+            color: #333; /* Dark text for input */
+        }
+
+        /* Ensure text is dark even when input is active or has focus */
+        input:focus, input:not(:focus):valid {
+            color: #333; /* Dark text when focused or when valid */
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div class="w-[460px] card rounded-2xl p-10 shadow-xl">
             <div class="text-center">
-                <h2 class="text-3xl font-bold text-gray-900">POS System</h2>
-                <p class="mt-2 text-gray-600">Sistem Kasir Terintegrasi</p>
+                <h2 class="text-5xl font-extrabold accent">Login</h2>
             </div>
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6">
                     <ul class="list-disc list-inside">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -27,44 +58,38 @@
 
             <form class="mt-8 space-y-6" method="POST" action="{{ route('login.post') }}">
                 @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                        <input id="username" name="username" type="text" required 
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <div class="space-y-6">
+                    <div class="relative">
+                        <label for="username" class="flex items-center text-sm font-semibold mb-2">
+                            <i class="fa-solid fa-user input-icon mr-2"></i> Username
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user input-icon absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input id="username" name="username" type="text" required 
+                                placeholder="Masukkan username"
+                                class="pl-12 block w-full px-4 py-3 field-bg rounded-pill focus:outline-none focus:ring-2 focus:ring-yellow-300"/>
+                        </div>
                     </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input id="password" name="password" type="password" required 
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+
+                    <div class="relative">
+                        <label for="password" class="flex items-center text-sm font-semibold mb-2">
+                            <i class="fa-solid fa-lock input-icon mr-2"></i> Password
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock input-icon absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input id="password" name="password" type="password" required 
+                                placeholder="Masukkan password"
+                                class="pl-12 block w-full px-4 py-3 field-bg rounded-pill focus:outline-none focus:ring-2 focus:ring-yellow-300"/>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <button type="submit" 
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <div class="mt-6">
+                    <button type="submit" class="w-full big-pill accent-bg text-gray-800 font-extrabold shadow-md hover:opacity-95 transition">
                         Masuk
                     </button>
                 </div>
             </form>
-
-            <div class="mt-6 grid grid-cols-2 gap-4">
-                <a href="{{ route('quick-login', 'admin') }}" 
-                    class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                    <i class="fas fa-user-shield mr-2"></i>
-                    Login sebagai Admin
-                </a>
-                <a href="{{ route('quick-login', 'kasir') }}" 
-                    class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-                    <i class="fas fa-cash-register mr-2"></i>
-                    Login sebagai Kasir
-                </a>
-            </div>
-
-            <div class="mt-4 text-center text-sm text-gray-500">
-                <p>Demo: Klik tombol di atas untuk login cepat</p>
-                <p class="mt-1">Username: admin/kasir | Password: password</p>
-            </div>
         </div>
     </div>
 </body>

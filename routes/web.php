@@ -56,13 +56,25 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::post('/adjustment', [StokBarangController::class, 'storeAdjustment'])->name('store-adjustment');
     });
 
-    Route::get('/laporan', [LaporanController::class, 'index'])->name('admin.laporan.index');
 
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('admin.laporan.index');
+    
     Route::get('/laporan/transaksi', [LaporanController::class, 'showTransaksiForm'])
          ->name('admin.laporan.transaksi.form');
-         
     Route::get('/laporan/transaksi/hasil', [LaporanController::class, 'generateTransaksi'])
          ->name('admin.laporan.transaksi.generate');
+
+    Route::get('/laporan/pembelian', [LaporanController::class, 'showPembelianForm'])
+         ->name('admin.laporan.pembelian.form');
+    Route::get('/laporan/pembelian/hasil', [LaporanController::class, 'generatePembelian'])
+         ->name('admin.laporan.pembelian.generate');
+
+
+    Route::get('/laporan/labarugi', [LaporanController::class, 'showLabaRugiForm'])
+         ->name('admin.laporan.labarugi.form');
+         
+    Route::get('/laporan/labarugi/hasil', [LaporanController::class, 'generateLabaRugi'])
+         ->name('admin.laporan.labarugi.generate');
 
 });
 

@@ -5,239 +5,306 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS - Kasir</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- CSS untuk Print Struk (dari file Anda) -->
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .numpad-btn {
+            background: linear-gradient(145deg, #E5E7EB, #F3F4F6);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1), -2px -2px 5px rgba(255,255,255,0.7);
+            transition: all 0.1s;
+        }
+        .numpad-btn:active {
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+            transform: scale(0.98);
+        }
+
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printArea, #printArea * {
-                visibility: visible;
-            }
-            #printArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            .no-print {
-                display: none;
-            }
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            .no-print { display: none; }
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Area POS Utama (tidak dicetak) -->
-    <div class="no-print">
-        <!-- Navigation (Identik) -->
-        <nav class="bg-purple-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center space-x-4">
-                        <i class="fas fa-cash-register text-2xl"></i>
-                        <span class="text-xl font-bold">POS System - Kasir</span>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('kasir.riwayat') }}" class="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded-lg">
-                            <i class="fas fa-history mr-2"></i>Riwayat
-                        </a>
-                        <span>Halo, {{ auth()->user()->nama }}</span>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded-lg">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                            </button>
-                        </form>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+    
+    <div class="no-print h-full flex flex-col">
+        <!-- Header -->
+        <nav class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shrink-0 shadow-sm">
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold text-gray-900">Transaksi</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="{{ route('kasir.riwayat') }}" class="text-gray-600 hover:text-gray-900 flex items-center gap-2 group" title="Riwayat Transaksi">
+                    <i class="fas fa-history text-lg"></i>
+                    <span class="text-sm font-medium text-gray-600 group-hover:text-gray-900">Riwayat</span>
+                </a>
+                
+                <!-- User Account with Dropdown -->
+                <div class="relative" id="userDropdown">
+                    <button class="flex items-center gap-0 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                        <img src="https://ui-avatars.com/api/?name={{ auth()->user()->nama }}&background=6366F1&color=fff" class="w-9 h-9 rounded-l-lg">
+                        <div class="px-3 py-1.5 flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-700">{{ auth()->user()->nama }}</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                        </div>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden" id="dropdownMenu">
+                        <div class="py-1">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-xs text-gray-500">Signed in as</p>
+                                <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->nama }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Product List (Logika dari Teman) -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">Daftar Produk</h2>
-                        
-                        <div class="mb-6">
-                            <input type="text" id="searchProduk" placeholder="Cari produk..." 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <div class="flex-1 p-4 overflow-hidden">
+            <div class="grid grid-cols-12 gap-4 h-full">
+                
+                <!-- Left Column: Info Cards + Products -->
+                <div class="col-span-7 flex flex-col gap-3 h-full min-h-0">
+                    
+                    <!-- Info Cards -->
+                    <div class="grid grid-cols-4 gap-3 flex-shrink-0">
+                        <div class="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm flex items-center gap-2">
+                            <i class="far fa-file-alt text-gray-500 text-sm"></i>
+                            <span class="font-medium text-xs text-gray-700">0123/KASR/UTM/2025</span>
                         </div>
-
-                        <!-- Product Grid (dari Teman, dengan data-prices) -->
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-                            @foreach($produks as $produk)
-                            <div class="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-purple-50 transition-colors product-item"
-                                data-produk-id="{{ $produk->id }}"
-                                data-nama="{{ $produk->nama_produk }}"
-                                data-harga="{{ $produk->harga_dasar }}"
-                                data-stok="{{ $produk->stok_sekarang }}"
-                                data-gambar="{{ $produk->gambar_url }}"
-                                data-quantity-prices="{{ $produk->levelHargaQuantities->where('is_active', true)->toJson() }}"
-                                data-golongan-prices="{{ $produk->levelHargaGolongans->where('is_active', true)->toJson() }}">
-                                <div class="text-center">
-                                    <img src="{{ $produk->gambar_url }}" alt="{{ $produk->nama_produk }}" 
-                                        class="w-16 h-16 mx-auto rounded-lg object-cover mb-2">
-                                    <h3 class="font-semibold text-sm text-gray-900">{{ $produk->nama_produk }}</h3>
-                                    <p class="text-green-600 font-bold text-sm">Rp {{ number_format($produk->harga_dasar, 0, ',', '.') }}</p>
-                                    <p class="text-xs text-gray-500">Stok: {{ $produk->stok_sekarang }} {{ $produk->satuan }}</p>
-                                    
-                                    <!-- Info Harga Spesial (dari Teman) -->
-                                    @if($produk->levelHargaQuantities->where('is_active', true)->count() > 0)
-                                    <p class="text-xs text-blue-600 mt-1">
-                                        <i class="fas fa-tag mr-1"></i>Harga quantity tersedia
-                                    </p>
-                                    @endif
-                                    @if($produk->levelHargaGolongans->where('is_active', true)->count() > 0)
-                                    <p class="text-xs text-purple-600 mt-1">
-                                        <i class="fas fa-crown mr-1"></i>Harga member tersedia
-                                    </p>
-                                    @endif
-                                </div>
-                            </div>
-                            @endforeach
+                        <div class="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm flex items-center gap-2">
+                            <i class="far fa-user text-gray-500 text-sm"></i>
+                            <span class="font-medium text-xs text-gray-700">{{ auth()->user()->nama }}</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Cart and Checkout (Logika dari Teman) -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">Keranjang Belanja</h2>
-                        
-                        <!-- Customer Selection (dari Teman, dengan data-golongan-id) -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pelanggan</label>
-                            <select id="pelangganSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                <option value="">Umum (Non-Member)</option>
+                        <div class="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm flex items-center gap-2">
+                            <i class="far fa-calendar-alt text-gray-500 text-sm"></i>
+                            <span class="font-medium text-xs text-gray-700">{{ date('d M Y') }}</span>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm flex items-center gap-2 relative">
+                            <i class="fas fa-users text-gray-500 text-sm"></i>
+                            <select id="pelangganSelect" class="bg-transparent flex-1 text-xs font-semibold text-gray-700 focus:outline-none appearance-none cursor-pointer uppercase">
+                                <option value="">UMUM</option>
                                 @foreach($pelanggans as $pelanggan)
                                 <option value="{{ $pelanggan->id }}" 
                                     data-diskon="{{ $pelanggan->golongan->diskon_persen ?? 0 }}"
                                     data-golongan-id="{{ $pelanggan->golongan_id }}">
-                                    {{ $pelanggan->nama }} - {{ $pelanggan->golongan->nama_tier }} ({{ $pelanggan->golongan->diskon_persen }}%)
+                                    {{ $pelanggan->nama }}
                                 </option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <!-- Cart Items -->
-                        <div class="border rounded-lg mb-4 max-h-64 overflow-y-auto">
-                            <table class="w-full" id="cartTable">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Produk</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Qty</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Subtotal</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cartItems">
-                                    <!-- Cart items will be populated by JavaScript -->
-                                </tbody>
-                            </table>
-                            <div id="emptyCart" class="p-8 text-center text-gray-500">
-                                <i class="fas fa-shopping-cart text-4xl mb-2"></i>
-                                <p>Keranjang kosong</p>
-                            </div>
-                        </div>
-
-                        <!-- Totals -->
-                        <div class="space-y-2 mb-4">
-                            <div class="flex justify-between">
-                                <span>Subtotal:</span>
-                                <span id="subtotalAmount">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between text-green-600">
-                                <span>Diskon:</span>
-                                <span id="diskonAmount">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between font-bold text-lg border-t pt-2">
-                                <span>Total:</span>
-                                <span id="totalAmount">Rp 0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Applied Pricing Info (dari Teman) -->
-                        <div id="pricingInfo" class="mb-4 p-3 bg-blue-50 rounded-lg hidden">
-                            <h4 class="font-medium text-blue-900 text-sm mb-2">Info Harga Terpakai:</h4>
-                            <div id="pricingDetails" class="text-xs text-blue-800 space-y-1">
-                                <!-- Pricing details will be shown here -->
-                            </div>
-                        </div>
-
-                        <!-- Payment Method -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
-                            <select id="paymentMethod" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                <option value="tunai">Tunai</option>
-                                <option value="debit">Debit</option>
-                                <option value="kredit">Kredit</option>
-                                <option value="qris">QRIS</option>
-                            </select>
-                        </div>
-
-                        <!-- Amount Paid -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Bayar</label>
-                            <input type="number" id="amountPaid" 
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                                placeholder="0">
-                        </div>
-
-                        <!-- Change -->
-                        <div class="mb-4">
-                            <div class="flex justify-between font-bold text-lg">
-                                <span>Kembalian:</span>
-                                <span id="changeAmount">Rp 0</span>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="space-y-2">
-                            <button id="checkoutBtn" 
-                                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled>
-                                <i class="fas fa-check mr-2"></i>Proses Transaksi
-                            </button>
-                            <button id="clearCartBtn" 
-                                class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
-                                <i class="fas fa-trash mr-2"></i>Kosongkan Keranjang
-                            </button>
+                            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                         </div>
                     </div>
+
+                    <!-- Products Section -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                        <div class="p-3 border-b border-gray-200 flex-shrink-0">
+                            <div class="relative">
+                                <input type="text" id="searchProduk" placeholder="Cari item..." 
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm">
+                                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 min-h-0 overflow-hidden p-3">
+                            <div class="h-full overflow-y-auto custom-scrollbar pr-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach($produks as $produk)
+                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-purple-500 hover:shadow-md transition-all product-item relative"
+                                        data-produk-id="{{ $produk->id }}"
+                                        data-nama="{{ $produk->nama_produk }}"
+                                        data-harga="{{ $produk->harga_dasar }}"
+                                        data-stok="{{ $produk->stok_sekarang }}"
+                                        data-gambar="{{ $produk->gambar_url }}"
+                                        data-quantity-prices="{{ $produk->levelHargaQuantities->where('is_active', true)->toJson() }}"
+                                        data-golongan-prices="{{ $produk->levelHargaGolongans->where('is_active', true)->toJson() }}">
+                                        
+                                        <div class="flex items-start gap-2">
+                                            <img src="{{ $produk->gambar_url }}" alt="" class="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0">
+                                            <div class="flex-1 min-w-0">
+                                                <h3 class="font-semibold text-xs text-gray-900 line-clamp-2 mb-1">{{ $produk->nama_produk }}</h3>
+                                                <p class="text-xs font-bold text-green-600">Rp {{ number_format($produk->harga_dasar, 0, ',', '.') }}</p>
+                                                <p class="text-xs text-gray-500">Stok: {{ $produk->stok_sekarang }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="absolute top-2 right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-xs hidden item-badge-qty" id="badge-{{$produk->id}}">0</div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Cart -->
+                <div class="col-span-5 flex flex-col gap-3 h-full min-h-0">
+                    
+                    <!-- Total Display -->
+                    <div class="bg-white border border-gray-200 rounded-lg px-6 py-4 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl font-bold text-gray-900">Rp</span>
+                            <span id="totalAmountDisplay" class="text-3xl font-extrabold text-gray-900">26.000,00</span>
+                        </div>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                        <div class="flex-1 overflow-y-auto custom-scrollbar p-3">
+                            <table class="w-full">
+                                <tbody id="cartItems">
+                                    <!-- Cart items akan di-populate -->
+                                </tbody>
+                            </table>
+                            
+                            <div id="emptyCart" class="h-full flex flex-col items-center justify-center text-gray-400">
+                                <i class="fas fa-shopping-cart text-4xl mb-2"></i>
+                                <p class="text-sm">Keranjang kosong</p>
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="p-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+                            <div class="text-xs space-y-1">
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span id="subtotalAmount">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-green-600">
+                                    <span>Diskon</span>
+                                    <span id="diskonAmount">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bayar Button -->
+                    <button id="openPaymentModalBtn" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-wallet text-lg"></i>
+                        <span class="text-lg">BAYAR</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Product Quantity Modal (Identik) -->
-    <div id="quantityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 no-print">
-        <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-lg font-bold mb-4" id="modalProductName">Produk Name</h3>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
-                <input type="number" id="quantityInput" min="1" value="1" 
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <p class="text-sm text-gray-500 mt-1" id="modalStockInfo">Stok tersedia: 0</p>
+    <!-- Quantity Modal -->
+    <div id="quantityModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h3 class="text-lg font-bold mb-1" id="modalProductName">Nama Produk</h3>
+            <p class="text-sm text-gray-500 mb-6" id="modalStockInfo">Stok: 0</p>
+            
+            <div class="flex items-center justify-center mb-6 gap-4">
+                <button onclick="adjustQty(-1)" class="w-12 h-12 rounded-lg bg-gray-100 hover:bg-gray-200 font-bold text-xl">-</button>
+                <input type="number" id="quantityInput" min="1" value="1" class="w-20 text-center py-2 text-3xl font-bold border-b-2 border-gray-300 focus:border-purple-500 focus:outline-none bg-transparent">
+                <button onclick="adjustQty(1)" class="w-12 h-12 rounded-lg bg-gray-100 hover:bg-gray-200 font-bold text-xl">+</button>
             </div>
-            <div class="flex space-x-2">
-                <button id="cancelQuantity" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors">
-                    Batal
-                </button>
-                <button id="addToCart" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                    Tambah ke Keranjang
-                </button>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="cancelQuantity" class="py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Batal</button>
+                <button id="addToCart" class="py-3 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700">Tambah</button>
             </div>
         </div>
     </div>
 
-    <!-- ========== MULAI STRUK MODAL (dari file Anda) ========== -->
+    <!-- Payment Modal (NEW DESIGN) -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden">
+            
+            <!-- Header -->
+            <div class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <button id="closePaymentModal" class="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Kembali</span>
+                </button>
+                <div class="text-right">
+                    <span class="text-xs text-gray-500 uppercase tracking-wide">Total Biaya :</span>
+                    <span id="popupTotalAmountDisplay" class="text-2xl font-extrabold text-gray-900 ml-2">Rp 26.000,00</span>
+                </div>
+            </div>
+
+            <div class="p-6 grid grid-cols-2 gap-6">
+                
+                <!-- Left: Numpad -->
+                <div>
+                    <div class="mb-6 text-right bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+                        <h2 class="text-4xl font-extrabold text-gray-900" id="displayBigTotal">Rp 26.000</h2>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2">
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('7')">7</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('8')">8</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('9')">9</button>
+                        <button class="text-2xl font-semibold h-16 rounded-lg text-white bg-red-500 hover:bg-red-600 shadow-md" onclick="inputKey('C')">C</button>
+
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('4')">4</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('5')">5</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('6')">6</button>
+                        <button class="numpad-btn text-xl font-semibold h-16 rounded-lg text-gray-700 flex items-center justify-center" onclick="inputKey('backspace')">
+                            <i class="fas fa-backspace"></i>
+                        </button>
+
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('1')">1</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('2')">2</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('3')">3</button>
+                        <div class="h-16"></div>
+
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700 col-span-3" onclick="inputKey('0')">0</button>
+                        <button class="numpad-btn text-2xl font-semibold h-16 rounded-lg text-gray-700" onclick="inputKey('000')">000</button>
+                    </div>
+                </div>
+
+                <!-- Right: Payment Method + Bayar -->
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">Metode Pembayaran</label>
+                        <div class="bg-gray-800 text-white rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-700 transition relative">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-wallet text-2xl text-yellow-400"></i>
+                                <span class="text-lg font-semibold" id="paymentMethodLabel">Cash</span>
+                            </div>
+                            <select id="popupPaymentMethod" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer bg-white text-gray-900" onchange="updatePaymentMethod()">
+                                <option value="tunai">Cash</option>
+                                <option value="debit">Debit</option>
+                                <option value="kredit">Kredit</option>
+                                <option value="qris">QRIS</option>
+                            </select>
+                            <i class="fas fa-chevron-down text-white/70"></i>
+                        </div>
+                    </div>
+
+                    <button id="processTransactionBtn" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-5 rounded-xl shadow-lg flex items-center justify-center gap-3 text-xl transition-all">
+                        <i class="fas fa-wallet"></i>
+                        <span>BAYAR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal (SAMA) -->
     <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div id="printArea" class="bg-white rounded-lg w-full max-w-sm">
             <!-- Isi Struk -->
@@ -316,15 +383,37 @@
 
     <!-- ========== SCRIPT GABUNGAN ========== -->
     <script>
+        // User Dropdown Toggle
+        const userDropdownBtn = document.querySelector('#userDropdown button');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        
+        userDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('userDropdown').contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
         let cart = [];
         let currentProduct = null;
+        let currentInputMoney = '';
 
-        // Product item click (dari Teman)
+        const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(num);
+        const formatRupiahFull = (num) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(num);
+        const parseRupiah = (str) => parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+
+        // Product Click
         $('.product-item').click(function() {
             const productId = $(this).data('produk-id');
             const productName = $(this).data('nama');
             const productPrice = $(this).data('harga');
             const productStock = $(this).data('stok');
+            const productImage = $(this).data('gambar');
             const quantityPrices = $(this).data('quantity-prices');
             const golonganPrices = $(this).data('golongan-prices');
             
@@ -333,6 +422,7 @@
                 name: productName,
                 price: parseFloat(productPrice),
                 stock: parseInt(productStock),
+                gambar_url: productImage,
                 quantityPrices: quantityPrices || [],
                 golonganPrices: golonganPrices || []
             };
@@ -343,22 +433,34 @@
             $('#quantityModal').removeClass('hidden').addClass('flex');
         });
 
-        // --- Logika Harga Kompleks (dari Teman) ---
+        window.adjustQty = function(change) {
+            const input = $('#quantityInput');
+            let newQty = parseInt(input.val()) + change;
+            if (newQty < 1) newQty = 1;
+            if (newQty > currentProduct.stock) newQty = currentProduct.stock;
+            input.val(newQty);
+        };
+
+        $('#cancelQuantity').click(() => $('#quantityModal').removeClass('flex').addClass('hidden'));
+
+        // Helper Functions untuk Harga Bertingkat
         function getQuantityPrice(product, quantity) {
             let bestPrice = product.price;
             let priceType = 'Reguler';
 
-            for (const priceRule of product.quantityPrices) {
-                const min = priceRule.qty_min;
-                const max = priceRule.qty_max;
-                const price = parseFloat(priceRule.harga_khusus);
-                
-                if (quantity >= min && (max === null || quantity <= max)) {
-                    if (price < bestPrice) {
-                        bestPrice = price;
-                        priceType = `Quantity (${min}+)`;
+            if (Array.isArray(product.quantityPrices)) {
+                product.quantityPrices.forEach(rule => {
+                    const min = rule.qty_min;
+                    const max = rule.qty_max;
+                    const price = parseFloat(rule.harga_khusus);
+                    
+                    if (quantity >= min && (max === null || quantity <= max)) {
+                        if (price < bestPrice) {
+                            bestPrice = price;
+                            priceType = `Quantity (${min}+)`;
+                        }
                     }
-                }
+                });
             }
             return { price: bestPrice, type: priceType };
         }
@@ -367,14 +469,16 @@
             let bestPrice = product.price;
             let priceType = 'Reguler';
 
-            for (const priceRule of product.golonganPrices) {
-                if (parseInt(priceRule.golongan_id) === parseInt(golonganId)) {
-                    const price = parseFloat(priceRule.harga_khusus);
-                    if (price < bestPrice) {
-                        bestPrice = price;
-                        priceType = 'Member Special';
+            if (Array.isArray(product.golonganPrices)) {
+                product.golonganPrices.forEach(rule => {
+                    if (parseInt(rule.golongan_id) === parseInt(golonganId)) {
+                        const price = parseFloat(rule.harga_khusus);
+                        if (price < bestPrice) {
+                            bestPrice = price;
+                            priceType = 'Member Special';
+                        }
                     }
-                }
+                });
             }
             return { price: bestPrice, type: priceType };
         }
@@ -391,10 +495,7 @@
             }
             return bestPrice;
         }
-        // --- Akhir Logika Harga Kompleks ---
 
-
-        // Add to cart (dari Teman)
         $('#addToCart').click(function() {
             const quantity = parseInt($('#quantityInput').val());
             const golonganSelect = $('#pelangganSelect');
@@ -415,259 +516,139 @@
                     return;
                 }
                 existingItem.quantity += quantity;
-                // Perbarui harga berdasarkan total kuantitas baru
                 const updatedBestPrice = getBestPrice(existingItem, existingItem.quantity, golonganId);
                 existingItem.appliedPrice = updatedBestPrice.price;
                 existingItem.priceType = updatedBestPrice.type;
                 existingItem.subtotal = existingItem.quantity * existingItem.appliedPrice;
             } else {
                 cart.push({
-                    ...currentProduct,
+                    id: currentProduct.id,
+                    name: currentProduct.name,
+                    price: currentProduct.price,
+                    stock: currentProduct.stock,
+                    gambar_url: currentProduct.gambar_url,
                     quantity: quantity,
                     appliedPrice: bestPrice.price,
                     priceType: bestPrice.type,
-                    subtotal: quantity * bestPrice.price
+                    subtotal: quantity * bestPrice.price,
+                    quantityPrices: currentProduct.quantityPrices,
+                    golonganPrices: currentProduct.golonganPrices
                 });
             }
 
-            updateCartDisplay();
+            renderCart();
             $('#quantityModal').removeClass('flex').addClass('hidden');
         });
 
-        // Remove from cart (Identik)
-        $(document).on('click', '.remove-item', function() {
-            const productId = $(this).data('id');
-            cart = cart.filter(item => item.id !== productId);
-            updateCartDisplay();
-        });
-
-        // Update quantity (dari Teman)
-        $(document).on('change', '.item-quantity', function() {
-            const productId = $(this).data('id');
-            const newQuantity = parseInt($(this).val());
-            const item = cart.find(item => item.id === productId);
-            const golonganSelect = $('#pelangganSelect');
-            const golonganId = golonganSelect.val() ? golonganSelect.find(':selected').data('golongan-id') : null;
+        function renderCart() {
+            const tbody = $('#cartItems');
+            tbody.empty();
+            let subtotal = 0;
             
-            if (newQuantity < 1) {
-                cart = cart.filter(item => item.id !== productId);
-            } else if (newQuantity > item.stock) {
-                alert('Stok tidak mencukupi!');
-                $(this).val(item.quantity);
-                return;
-            } else {
-                const bestPrice = getBestPrice(item, newQuantity, golonganId);
-                item.quantity = newQuantity;
-                item.appliedPrice = bestPrice.price;
-                item.priceType = bestPrice.type;
-                item.subtotal = newQuantity * bestPrice.price;
-            }
-            
-            updateCartDisplay();
-        });
-
-        // Clear cart (Gabungan)
-        $('#clearCartBtn').click(function() {
-            if (confirm('Yakin ingin mengosongkan keranjang?')) {
-                cart = [];
-                updateCartDisplay();
-                $('#pricingInfo').addClass('hidden'); // Reset info harga
-            }
-        });
-
-        // Calculate change (Identik)
-        $('#amountPaid').on('input', function() {
-            calculateChange();
-        });
-
-        // Checkout (GABUNGAN)
-        $('#checkoutBtn').click(function() {
-            if (cart.length === 0) {
-                alert('Keranjang kosong!');
-                return;
-            }
-
-            const amountPaid = parseFloat($('#amountPaid').val()) || 0;
-            const total = calculateTotal();
-            
-            if (amountPaid < total.finalTotal) {
-                alert('Jumlah pembayaran kurang!');
-                return;
-            }
-
-            if (!confirm('Proses transaksi ini?')) {
-                return;
-            }
-
-            const formData = {
-                items: cart.map(item => ({
-                    produk_id: item.id,
-                    qty: item.quantity
-                })),
-                pelanggan_id: $('#pelangganSelect').val() || null,
-                metode_pembayaran: $('#paymentMethod').val(),
-                amount_paid: amountPaid,
-                catatan: ''
-            };
-
-            console.log("Mengirim data:", formData);
-
-            $.ajax({
-                url: '{{ route("kasir.store-transaksi") }}',
-                method: 'POST',
-                data: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                // --- Success handler (dari file Anda) ---
-                success: function(response) {
-                    console.log("Transaksi Berhasil Diterima:", response);
-
-                    if (response.success) {
-                        console.log("Memanggil showReceipt...");
-                        showReceipt(response.transaksi); // Panggil modal struk
-                        console.log("showReceipt Selesai.");
-
-                        // Reset tampilan POS
-                        cart = [];
-                        updateCartDisplay();
-                        $('#amountPaid').val('');
-                        $('#pelangganSelect').val('');
-                        $('#pricingInfo').addClass('hidden'); // Reset info harga
-                        console.log("Reset POS Selesai.");
-                    } else {
-                        console.error("Server merespon success=false:", response.message);
-                        alert('Error: ' + response.message);
-                    }
-                },
-                // --- Error handler (dari file Anda) ---
-                error: function(xhr) {
-                    console.error("AJAX Error:", xhr.status, xhr.responseText);
-                    const error = xhr.responseJSON;
-                    alert('Error: ' + (error ? error.message : 'Terjadi kesalahan. Cek console F12.'));
-                }
-            });
-        });
-
-        // Update cart display (dari Teman)
-        function updateCartDisplay() {
-            const cartItems = $('#cartItems');
-            const emptyCart = $('#emptyCart');
-            const checkoutBtn = $('#checkoutBtn');
-            const pricingInfo = $('#pricingInfo');
+            $('.item-badge-qty').addClass('hidden').text('0');
 
             if (cart.length === 0) {
-                cartItems.empty();
-                emptyCart.show();
-                checkoutBtn.prop('disabled', true);
-                pricingInfo.addClass('hidden');
+                $('#emptyCart').show();
+                $('#openPaymentModalBtn').prop('disabled', true);
             } else {
-                emptyCart.hide();
-                checkoutBtn.prop('disabled', false);
-                
-                cartItems.empty();
-                let hasSpecialPricing = false;
-                const pricingDetails = [];
+                $('#emptyCart').hide();
+                $('#openPaymentModalBtn').prop('disabled', false);
 
                 cart.forEach(item => {
-                    const priceBadge = item.priceType !== 'Reguler' ? 
-                        `<span class="text-xs text-green-600 ml-1">(${item.priceType})</span>` : '';
+                    subtotal += item.subtotal;
+                    $(`#badge-${item.id}`).removeClass('hidden').text(item.quantity);
 
-                    const row = `
-                        <tr class="border-b">
-                            <td class="px-3 py-2">
-                                <div class="text-sm font-medium text-gray-900">${item.name}</div>
-                                <div class="text-sm text-gray-500">
-                                    Rp ${formatNumber(item.appliedPrice)}${priceBadge}
+                    tbody.append(`
+                        <tr class="border-b border-gray-100">
+                            <td class="py-3 px-2">
+                                <div class="flex gap-2 items-start">
+                                    <img src="${item.gambar_url || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold text-xs text-gray-900 line-clamp-1 mb-1">${item.name}</div>
+                                        <div class="text-xs text-gray-500 mb-2">@ Rp ${formatRupiah(item.appliedPrice)}</div>
+                                        
+                                        <!-- Quantity Controls -->
+                                        <div class="flex items-center gap-2">
+                                            <button class="decrease-qty w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 font-bold transition" data-id="${item.id}">
+                                                <i class="fas fa-minus text-xs"></i>
+                                            </button>
+                                            <span class="text-xs font-bold text-gray-900 min-w-[20px] text-center">${item.quantity}</span>
+                                            <button class="increase-qty w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 font-bold transition" data-id="${item.id}" data-stock="${item.stock}">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <div class="font-bold text-sm text-gray-900 mb-2">Rp ${formatRupiah(item.subtotal)}</div>
+                                        <button class="remove-item text-red-500 hover:text-red-700 text-xs font-medium" data-id="${item.id}">
+                                            <i class="fas fa-trash mr-1"></i>Hapus
+                                        </button>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-3 py-2 text-right">
-                                <input type="number" class="item-quantity w-16 text-right border rounded px-1 py-1 text-sm" 
-                                    data-id="${item.id}" value="${item.quantity}" min="1" max="${item.stock}">
-                            </td>
-                            <td class="px-3 py-2 text-right text-sm font-medium">
-                                Rp ${formatNumber(item.subtotal)}
-                            </td>
-                            <td class="px-3 py-2 text-right">
-                                <button class="remove-item text-red-600 hover:text-red-800" data-id="${item.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
                         </tr>
-                    `;
-                    cartItems.append(row);
-
-                    if (item.priceType !== 'Reguler') {
-                        hasSpecialPricing = true;
-                        if (!pricingDetails.includes(item.priceType)) {
-                            pricingDetails.push(item.priceType);
-                        }
-                    }
+                    `);
                 });
-
-                if (hasSpecialPricing) {
-                    const pricingInfoHtml = pricingDetails.map(detail => 
-                        `<div><i class="fas fa-check text-green-500 mr-1"></i>${detail}</div>`
-                    ).join('');
-                    $('#pricingDetails').html(pricingInfoHtml);
-                    pricingInfo.removeClass('hidden');
-                } else {
-                    pricingInfo.addClass('hidden');
-                }
             }
 
-            calculateTotals();
-        }
-
-        // Calculate totals (Identik)
-        function calculateTotals() {
-            const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
             const diskonPersen = $('#pelangganSelect').find(':selected').data('diskon') || 0;
-            const diskonAmount = (subtotal * diskonPersen) / 100;
-            const finalTotal = subtotal - diskonAmount;
+            const diskonVal = (subtotal * diskonPersen) / 100;
+            const finalTotal = subtotal - diskonVal;
 
-            $('#subtotalAmount').text(`Rp ${formatNumber(subtotal)}`);
-            $('#diskonAmount').text(`-Rp ${formatNumber(diskonAmount)}`);
-            $('#totalAmount').text(`Rp ${formatNumber(finalTotal)}`);
-
-            calculateChange();
+            $('#subtotalAmount').text('Rp ' + formatRupiah(subtotal));
+            $('#diskonAmount').text('-Rp ' + formatRupiah(diskonVal));
+            $('#totalAmountDisplay').text(formatRupiahFull(finalTotal));
         }
 
-        // Calculate change (Identik)
-        function calculateChange() {
-            const total = calculateTotal();
-            const amountPaid = parseFloat($('#amountPaid').val()) || 0;
-            const change = amountPaid - total.finalTotal;
+        // Increase Quantity
+        $(document).on('click', '.increase-qty', function() {
+            const id = $(this).data('id');
+            const stock = $(this).data('stock');
+            const item = cart.find(i => i.id === id);
             
-            $('#changeAmount').text(`Rp ${formatNumber(Math.max(0, change))}`);
-        }
-
-        // Calculate total (Identik)
-        function calculateTotal() {
-            const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-            const diskonPersen = $('#pelangganSelect').find(':selected').data('diskon') || 0;
-            const diskonAmount = (subtotal * diskonPersen) / 100;
-            const finalTotal = subtotal - diskonAmount;
-
-            return {
-                subtotal,
-                diskonAmount,
-                finalTotal
-            };
-        }
-
-        // Format number (dari file Anda, lebih aman)
-        function formatNumber(number) {
-            const num = parseFloat(number) || 0;
-            return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        // Modal events
-        $('#cancelQuantity').click(function() {
-            $('#quantityModal').removeClass('flex').addClass('hidden');
+            if (item && item.quantity < stock) {
+                item.quantity++;
+                const golonganId = $('#pelangganSelect').val() ? $('#pelangganSelect').find(':selected').data('golongan-id') : null;
+                const bestPrice = getBestPrice(item, item.quantity, golonganId);
+                item.appliedPrice = bestPrice.price;
+                item.priceType = bestPrice.type;
+                item.subtotal = item.quantity * item.appliedPrice;
+                renderCart();
+            } else {
+                alert('Stok tidak mencukupi!');
+            }
         });
 
-        // Pelanggan select change (dari Teman)
+        // Decrease Quantity
+        $(document).on('click', '.decrease-qty', function() {
+            const id = $(this).data('id');
+            const item = cart.find(i => i.id === id);
+            
+            if (item) {
+                if (item.quantity > 1) {
+                    item.quantity--;
+                    const golonganId = $('#pelangganSelect').val() ? $('#pelangganSelect').find(':selected').data('golongan-id') : null;
+                    const bestPrice = getBestPrice(item, item.quantity, golonganId);
+                    item.appliedPrice = bestPrice.price;
+                    item.priceType = bestPrice.type;
+                    item.subtotal = item.quantity * item.appliedPrice;
+                    renderCart();
+                } else {
+                    // Jika quantity = 1, hapus item
+                    if (confirm('Hapus item dari keranjang?')) {
+                        cart = cart.filter(i => i.id !== id);
+                        renderCart();
+                    }
+                }
+            }
+        });
+
+        $(document).on('click', '.remove-item', function() {
+            const id = $(this).data('id');
+            cart = cart.filter(i => i.id !== id);
+            renderCart();
+        });
+
         $('#pelangganSelect').change(function() {
             const golonganId = $(this).val() ? $(this).find(':selected').data('golongan-id') : null;
             
@@ -678,77 +659,186 @@
                 item.subtotal = item.quantity * bestPrice.price;
             });
             
-            updateCartDisplay();
+            renderCart();
         });
 
-        // Search functionality (Identik)
-        $('#searchProduk').on('input', function() {
-            const searchTerm = $(this).val().toLowerCase();
-            $('.product-item').each(function() {
-                const productName = $(this).data('nama').toLowerCase();
-                if (productName.includes(searchTerm)) {
-                    $(this).show();
+        // Payment Modal
+        $('#openPaymentModalBtn').click(function() {
+            if(cart.length === 0) return;
+
+            const totalTextRaw = $('#totalAmountDisplay').text(); 
+            const totalVal = parseRupiah(totalTextRaw);
+            
+            $('#popupTotalAmountDisplay').text('Rp ' + totalTextRaw);
+            $('#popupTotalAmountDisplay').data('val', totalVal); 
+            
+            currentInputMoney = '';
+            updateMoneyInputDisplay();
+            
+            $('#paymentModal').removeClass('hidden').addClass('flex');
+        });
+
+        $('#closePaymentModal').click(() => $('#paymentModal').removeClass('flex').addClass('hidden'));
+
+        window.inputKey = function(val) {
+            if (val === 'C') {
+                currentInputMoney = '';
+            } else if (val === 'backspace') {
+                currentInputMoney = currentInputMoney.slice(0, -1);
+            } else {
+                if(currentInputMoney === '0') currentInputMoney = val;
+                else currentInputMoney += val;
+            }
+            updateMoneyInputDisplay();
+        };
+
+        // Keyboard support untuk Payment Modal
+        document.addEventListener('keydown', function(e) {
+            if ($('#paymentModal').hasClass('flex')) {
+                // Number keys (0-9)
+                if (e.key >= '0' && e.key <= '9') {
+                    e.preventDefault();
+                    inputKey(e.key);
+                }
+                // Backspace
+                else if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    inputKey('backspace');
+                }
+                // Delete untuk clear
+                else if (e.key === 'Delete') {
+                    e.preventDefault();
+                    inputKey('C');
+                }
+                // Enter untuk bayar
+                else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#processTransactionBtn').click();
+                }
+                // Escape untuk close
+                else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    $('#closePaymentModal').click();
+                }
+            }
+        });
+
+        function updateMoneyInputDisplay() {
+            if (currentInputMoney === '') {
+                $('#displayBigTotal').text('Rp 0');
+            } else {
+                const num = parseFloat(currentInputMoney);
+                if(!isNaN(num)) {
+                    $('#displayBigTotal').text('Rp ' + formatRupiah(num));
                 } else {
-                    $(this).hide();
+                    $('#displayBigTotal').text('Rp ' + currentInputMoney);
+                }
+            }
+        }
+
+        function updatePaymentMethod() {
+            const txt = $('#popupPaymentMethod').find("option:selected").text();
+            $('#paymentMethodLabel').text(txt);
+        }
+
+        $('#processTransactionBtn').click(function() {
+            const totalTagihan = $('#popupTotalAmountDisplay').data('val');
+            
+            let uangBayar = 0;
+            if(currentInputMoney !== '') {
+                uangBayar = parseFloat(currentInputMoney);
+            }
+
+            if (uangBayar < totalTagihan) {
+                alert('Uang pembayaran kurang!');
+                return;
+            }
+
+            const formData = {
+                items: cart.map(item => ({
+                    produk_id: item.id,
+                    qty: item.quantity
+                })),
+                pelanggan_id: $('#pelangganSelect').val() || null,
+                metode_pembayaran: $('#popupPaymentMethod').val(),
+                amount_paid: uangBayar,
+                catatan: ''
+            };
+
+            $.ajax({
+                url: '{{ route("kasir.store-transaksi") }}',
+                method: 'POST',
+                data: formData,
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                success: function(response) {
+                    if (response.success) {
+                        $('#paymentModal').removeClass('flex').addClass('hidden');
+                        showReceipt(response.transaksi);
+                        
+                        cart = [];
+                        renderCart();
+                        $('#pelangganSelect').val('');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr);
+                    alert('Error: Gagal memproses transaksi');
                 }
             });
         });
 
-        // Initialize (Identik)
-        updateCartDisplay();
-
-
-        // ========== FUNGSI STRUK (dari file Anda) ==========
-
         function showReceipt(data) {
-            try {
-                const date = new Date(data.tanggal);
-                const formattedDate = date.toLocaleDateString('id-ID', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                }).replace('.', ':');
+            const date = new Date(data.tanggal);
+            const formattedDate = date.toLocaleDateString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
 
-                $('#receiptKode').text(data.kode_transaksi);
-                $('#receiptTanggal').text(formattedDate);
-                $('#receiptKasir').text(data.kasir.nama);
-                $('#receiptPelanggan').text(data.pelanggan ? data.pelanggan.nama : 'Umum');
+            $('#receiptKode').text(data.kode_transaksi);
+            $('#receiptTanggal').text(formattedDate);
+            $('#receiptKasir').text(data.kasir.nama);
+            $('#receiptPelanggan').text(data.pelanggan ? data.pelanggan.nama : 'Umum');
 
-                const itemsContainer = $('#receiptItems');
-                itemsContainer.empty();
-                data.items.forEach(item => {
-                    const itemHtml = `
-                        <div class="item">
-                            <div class="font-medium">${item.nama_produk}</div>
-                            <div class="flex justify-between pl-2">
-                                <span>${item.qty} x ${formatNumber(item.harga)}</span>
-                                <span>${formatNumber(item.subtotal)}</span>
-                            </div>
+            const itemsContainer = $('#receiptItems');
+            itemsContainer.empty();
+            data.items.forEach(item => {
+                itemsContainer.append(`
+                    <div class="item">
+                        <div class="font-medium">${item.nama_produk}</div>
+                        <div class="flex justify-between pl-2">
+                            <span>${item.qty} x ${formatRupiah(item.harga)}</span>
+                            <span>${formatRupiah(item.subtotal)}</span>
                         </div>
-                    `;
-                    itemsContainer.append(itemHtml);
-                });
+                    </div>
+                `);
+            });
 
-                $('#receiptSubtotal').text('Rp ' + formatNumber(data.subtotal_raw));
-                $('#receiptDiskon').text('-Rp ' + formatNumber(data.diskon_raw));
-                $('#receiptTotal').text('Rp ' + formatNumber(data.total_raw));
-                $('#receiptBayar').text('Rp ' + formatNumber(data.bayar_raw));
-                $('#receiptKembali').text('Rp ' + formatNumber(data.kembali_raw));
-                
-                $('#receiptModal').removeClass('hidden').addClass('flex');
-            } catch (e) {
-                console.error("Error di dalam showReceipt:", e);
-                alert("Terjadi error saat menampilkan struk. Cek console F12.");
-            }
+            $('#receiptSubtotal').text('Rp ' + formatRupiah(data.subtotal_raw));
+            $('#receiptDiskon').text('-Rp ' + formatRupiah(data.diskon_raw));
+            $('#receiptTotal').text('Rp ' + formatRupiah(data.total_raw));
+            $('#receiptBayar').text('Rp ' + formatRupiah(data.bayar_raw));
+            $('#receiptKembali').text('Rp ' + formatRupiah(data.kembali_raw));
+            
+            $('#receiptModal').removeClass('hidden').addClass('flex');
         }
 
         function printReceipt() {
             window.print();
         }
 
-        $('#closeReceipt').click(function() {
-            $('#receiptModal').removeClass('flex').addClass('hidden');
-            $('#searchProduk').focus();
+        $('#closeReceipt').click(() => $('#receiptModal').removeClass('flex').addClass('hidden'));
+
+        $('#searchProduk').on('input', function() {
+            const term = $(this).val().toLowerCase();
+            $('.product-item').each(function() {
+                const name = $(this).data('nama').toLowerCase();
+                $(this).toggle(name.includes(term));
+            });
         });
+
+        renderCart();
     </script>
 </body>
 </html>

@@ -18,10 +18,26 @@
              <!-- ... (Isi sidebar Anda di sini) ... -->
              <nav class="mt-6">
                 <div class="px-4 space-y-2">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                    <a href="{{ route('admin.laporan.index') }}" class="flex items-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left mr-3"></i> Kembali ke Menu
+                </a>
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
                     </a>
-                    <!-- ... link sidebar lainnya ... -->
+                    <a href="{{ route('admin.produk.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-box mr-3"></i> Manajemen Produk
+                    </a>
+                    <a href="{{ route('admin.stok-barang.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-warehouse mr-3"></i>
+                        Riwayat Stok
+                    </a>
+                    <a href="{{ route('admin.level-harga.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-tags mr-3"></i> Level Harga
+                    </a>
+                    <a href="{{ route('admin.golongan.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-users mr-3"></i> Golongan Member
+                    </a>
                     <a href="{{ route('admin.pelanggan.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-user-friends mr-3"></i> Data Pelanggan
                     </a>
