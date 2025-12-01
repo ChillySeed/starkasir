@@ -49,9 +49,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::delete('/golongan/{levelHargaGolongan}', [AdminLevelHarga::class, 'destroyGolongan'])->name('destroy-golongan');
     });
     Route::prefix('admin/stok-barang')->name('admin.stok-barang.')->group(function () {
-        Route::get('/', [StokBarangController::class, 'index'])->name('index');
-        Route::get('/export', [StokBarangController::class, 'export'])->name('export');
-        Route::get('/produk/{produk}', [StokBarangController::class, 'show'])->name('show');
+          Route::get('/', [StokBarangController::class, 'index'])->name('index');
+          Route::get('/export', [StokBarangController::class, 'export'])->name('export');
+          Route::get('/produk/{produk}', [StokBarangController::class, 'show'])->name('show');
+          Route::get('/create', [StokBarangController::class, 'create'])->name('create');
+          Route::post('/store', [StokBarangController::class, 'store'])->name('store');
+
         Route::get('/adjustment', [StokBarangController::class, 'createAdjustment'])->name('create-adjustment');
         Route::post('/adjustment', [StokBarangController::class, 'storeAdjustment'])->name('store-adjustment');
     });

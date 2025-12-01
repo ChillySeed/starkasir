@@ -5,25 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golongan Member - POS System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
+<body class="text-gray-800">
     <!-- Navigation -->
-    <nav class="bg-blue-600 text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-cash-register text-2xl"></i>
-                    <span class="text-xl font-bold">POS System - Admin</span>
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-4">
+                    <img src="{{ asset('images/starlogo.png') }}" alt="Logo" class="h-10 w-auto">
+                    <div class="w-px h-8 bg-gray-300"></div>
+                    <h1 class="text-xl font-bold text-gray-900">Golongan Member</h1>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span>Halo, {{ auth()->user()->nama }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                <div class="flex items-center gap-4">
+                    <div class="relative" id="userDropdown">
+                        <button class="flex items-center gap-0 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                            <img src="https://ui-avatars.com/api/?name={{ auth()->user()->nama }}&background=FCD34D&color=1F2937" class="w-9 h-9 rounded-l-lg">
+                            <div class="px-3 py-1.5 flex items-center gap-2">
+                                <span class="text-sm font-medium text-gray-700">{{ auth()->user()->nama }}</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                            </div>
                         </button>
-                    </form>
+                        
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50" id="dropdownMenu">
+                            <div class="py-1">
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p class="text-xs text-gray-500">Signed in as</p>
+                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->nama }}</p>
+                                </div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -32,42 +58,42 @@
     <!-- Sidebar and Main Content -->
     <div class="flex">
         <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-lg min-h-screen">
+        <div class="w-64 bg-white shadow-sm min-h-screen border-r border-gray-200">
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
                     <a href="{{ route('admin.dashboard') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-tachometer-alt mr-3 w-5"></i>
                         Dashboard
                     </a>
                     <a href="{{ route('admin.produk.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-box mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-box mr-3 w-5"></i>
                         Manajemen Produk
                     </a>
                     <a href="{{ route('admin.stok-barang.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-warehouse mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-warehouse mr-3 w-5"></i>
                         Riwayat Stok
                     </a>
                     <a href="{{ route('admin.level-harga.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-tags mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-tags mr-3 w-5"></i>
                         Level Harga
                     </a>
                     <a href="{{ route('admin.golongan.index') }}" 
-                        class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
-                        <i class="fas fa-users mr-3"></i>
+                        class="flex items-center px-4 py-3 bg-yellow-50 text-yellow-700 rounded-lg font-medium border border-yellow-200">
+                        <i class="fas fa-users mr-3 w-5 text-yellow-600"></i>
                         Golongan Member
                     </a>
                     <a href="{{ route('admin.pelanggan.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-user-friends mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-user-friends mr-3 w-5"></i>
                         Data Pelanggan
                     </a>
                     <a href="{{ route('admin.laporan.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-chart-bar mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-chart-bar mr-3 w-5"></i>
                         Laporan
                     </a>
                 </div>
@@ -75,20 +101,21 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 p-8">
+        <div class="flex-1 p-6">
             <div class="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Golongan Member</h1>
-                    <p class="text-gray-600">Kelola tier membership dan diskon untuk pelanggan</p>
+                    <h2 class="text-2xl font-bold text-gray-900">Golongan Member</h2>
+                    <p class="text-gray-600 mt-1">Kelola tier membership dan diskon untuk pelanggan</p>
                 </div>
                 <a href="{{ route('admin.golongan.create') }}" 
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Tambah Golongan
+                    class="bg-yellow-500 text-gray-900 px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2 font-medium">
+                    <i class="fas fa-plus"></i>Tambah Golongan
                 </a>
             </div>
 
             @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i>
                     {{ session('success') }}
                 </div>
             @endif
@@ -96,14 +123,17 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 @foreach($golongans as $golongan)
-                <div class="bg-white rounded-lg shadow p-6 border-l-4 
-                    {{ $golongan->nama_tier == 'General' ? 'border-gray-400' : 
-                       ($golongan->nama_tier == 'Bronze' ? 'border-yellow-600' : 
-                       ($golongan->nama_tier == 'Silver' ? 'border-gray-400' : 'border-yellow-400')) }}">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 border-l-4 
+                    {{ $golongan->nama_tier == 'General' ? 'border-l-blue-400' : 
+                       ($golongan->nama_tier == 'Bronze' ? 'border-l-orange-400' : 
+                       ($golongan->nama_tier == 'Silver' ? 'border-l-gray-400' : 'border-l-yellow-400')) }}">
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900">{{ $golongan->nama_tier }}</h3>
-                            <p class="text-2xl font-bold text-blue-600">{{ $golongan->diskon_persen }}%</p>
+                            <p class="text-2xl font-bold 
+                                {{ $golongan->nama_tier == 'General' ? 'text-blue-600' : 
+                                   ($golongan->nama_tier == 'Bronze' ? 'text-orange-600' : 
+                                   ($golongan->nama_tier == 'Silver' ? 'text-gray-600' : 'text-yellow-600')) }}">{{ $golongan->diskon_persen }}%</p>
                             <p class="text-sm text-gray-500">Diskon</p>
                         </div>
                         <div class="text-right">
@@ -119,9 +149,9 @@
             </div>
 
             <!-- Golongan Table -->
-            <div class="bg-white rounded-lg shadow">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Daftar Golongan Member</h2>
+                    <h3 class="text-base font-semibold text-gray-900">Daftar Golongan Member</h3>
                 </div>
                 <div class="p-6">
                     <div class="overflow-x-auto">
@@ -141,8 +171,8 @@
                                     <td class="px-4 py-4">
                                         <div class="flex items-center">
                                             <div class="w-8 h-8 rounded-full flex items-center justify-center 
-                                                {{ $golongan->nama_tier == 'General' ? 'bg-gray-100 text-gray-600' : 
-                                                   ($golongan->nama_tier == 'Bronze' ? 'bg-yellow-100 text-yellow-600' : 
+                                                {{ $golongan->nama_tier == 'General' ? 'bg-blue-100 text-blue-600' : 
+                                                   ($golongan->nama_tier == 'Bronze' ? 'bg-orange-100 text-orange-600' : 
                                                    ($golongan->nama_tier == 'Silver' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-600')) }}">
                                                 <i class="fas fa-crown text-sm"></i>
                                             </div>
@@ -151,6 +181,7 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-money-bill-wave text-green-600 text-xl mr-1"></i>
                                             {{ $golongan->diskon_persen }}% Diskon
                                         </span>
                                     </td>
@@ -164,7 +195,7 @@
                                     <td class="px-4 py-4 text-right">
                                         <div class="flex justify-end space-x-2">
                                             <a href="{{ route('admin.golongan.edit', $golongan->id) }}" 
-                                                class="text-blue-600 hover:text-blue-900">
+                                                class="text-yellow-600 hover:text-yellow-800">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <form method="POST" action="{{ route('admin.golongan.destroy', $golongan->id) }}" 
@@ -184,10 +215,10 @@
                     </div>
 
                     @if($golongans->isEmpty())
-                    <div class="text-center py-8">
-                        <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-500">Belum ada golongan member</p>
-                        <a href="{{ route('admin.golongan.create') }}" class="text-blue-600 hover:text-blue-800 mt-2 inline-block">
+                    <div class="text-center py-12">
+                        <i class="fas fa-users text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500 mb-1">Belum ada golongan member</p>
+                        <a href="{{ route('admin.golongan.create') }}" class="text-yellow-600 hover:text-yellow-800 mt-2 inline-block">
                             Tambah golongan pertama
                         </a>
                     </div>
@@ -196,17 +227,17 @@
             </div>
 
             <!-- Benefits Comparison -->
-            <div class="mt-6 bg-white rounded-lg shadow">
+            <div class="mt-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Perbandingan Benefit Golongan</h2>
+                    <h3 class="text-base font-semibold text-gray-900">Perbandingan Benefit Golongan</h3>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-{{ count($golongans) }} gap-4">
                         @foreach($golongans as $golongan)
-                        <div class="text-center p-4 border rounded-lg 
-                            {{ $golongan->nama_tier == 'Gold' ? 'bg-yellow-50 border-yellow-200' : 
-                               ($golongan->nama_tier == 'Silver' ? 'bg-gray-50 border-gray-200' : 
-                               ($golongan->nama_tier == 'Bronze' ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200')) }}">
+                        <div class="text-center p-4 border border-gray-200 rounded-lg 
+                            {{ $golongan->nama_tier == 'Gold' ? 'bg-yellow-50' : 
+                               ($golongan->nama_tier == 'Silver' ? 'bg-gray-50' : 
+                               ($golongan->nama_tier == 'Bronze' ? 'bg-orange-50' : 'bg-blue-50')) }}">
                             <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center 
                                 {{ $golongan->nama_tier == 'Gold' ? 'bg-yellow-100 text-yellow-600' : 
                                    ($golongan->nama_tier == 'Silver' ? 'bg-gray-100 text-gray-600' : 
@@ -226,5 +257,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // User Dropdown Toggle
+        const userDropdownBtn = document.querySelector('#userDropdown button');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        
+        userDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('userDropdown').contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,12 +1,15 @@
 <?php
-
+// app/Http\Controllers\Admin\LaporanController.php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\Transaksi;
-use App\Models\Pembelian; 
+use App\Models\StokBarang;
+use App\Models\Produk;
+use App\Models\Laporan as LaporanModel;
+use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
@@ -36,7 +39,7 @@ class LaporanController extends Controller
         ]);
 
         // Query Transaksi
-        $query = Transaksi::with('pelanggan')
+        $query = Transaksi::with(['pelanggan', 'user', 'detailTransaksis.produk'])
                         ->whereBetween('tanggal_transaksi', [
                             $request->tanggal_mulai . ' 00:00:00', 
                             $request->tanggal_akhir . ' 23:59:59'
@@ -46,8 +49,9 @@ class LaporanController extends Controller
             $query->where('metode_pembayaran', $request->metode_pembayaran);
         }
         
-        // FILTER STATUS DIHAPUS (Sesuai Database Anda)
-        // if ($request->filled('status')) { $query->where('status', $request->status); }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
         
         $transaksis = $query->orderBy('tanggal_transaksi', 'desc')->get();
 
@@ -58,12 +62,12 @@ class LaporanController extends Controller
                     'tanggal_mulai' => $request->tanggal_mulai,
                     'tanggal_akhir' => $request->tanggal_akhir,
                     'metode_pembayaran' => $request->metode_pembayaran,
+                    'status' => $request->status,
                 ]
             ]);
         } elseif ($request->action == 'pdf') {
             return "Logika PDF Transaksi (Belum Diimplementasikan)";
         } else {
-            // Fallback jika diakses tanpa AJAX
             return view('admin.laporan.laporan_transaksi_result', compact('transaksis'));
         }
     }
@@ -85,35 +89,46 @@ class LaporanController extends Controller
             'action' => 'required|in:tampilkan,pdf,json'
         ]);
 
-        // Query Pembelian
-        // Pastikan nama kolom tanggal di DB adalah 'tanggal_pembelian'
-        $query = Pembelian::with('supplier') 
-                        ->whereBetween('tanggal_pembelian', [
+        // Query StokBarang untuk stok masuk (pembelian, adjustment masuk, retur)
+        $query = StokBarang::with(['produk'])
+                        ->where(function($q) {
+                            $q->where('jenis_perubahan', 'pembelian')
+                              ->orWhere('jenis_perubahan', 'adjustment_masuk')
+                              ->orWhere('jenis_perubahan', 'retur')
+                              ->orWhere('jenis_perubahan', 'adjustment')
+                              ->orWhere('jenis_perubahan', 'lainnya');
+                        })
+                        ->where('qty_masuk', '>', 0)
+                        ->whereBetween('tanggal_perubahan', [
                             $request->tanggal_mulai . ' 00:00:00', 
                             $request->tanggal_akhir . ' 23:59:59'
                         ]);
 
-        // FILTER STATUS DIHAPUS (Sesuai Database Anda)
-        // if ($request->filled('status')) { $query->where('status', $request->status); }
-        
-        $pembelians = $query->orderBy('tanggal_pembelian', 'desc')->get();
+        // Filter by jenis perubahan if provided
+        if ($request->filled('jenis_perubahan')) {
+            $query->where('jenis_perubahan', $request->jenis_perubahan);
+        }
+
+        $stokMasuk = $query->orderBy('tanggal_perubahan', 'desc')->get();
 
         if ($request->action == 'json') {
             return response()->json([
-                'data' => $pembelians,
+                'stok_masuk' => $stokMasuk,
                 'filters' => [
                     'tanggal_mulai' => $request->tanggal_mulai,
                     'tanggal_akhir' => $request->tanggal_akhir,
+                    'jenis_perubahan' => $request->jenis_perubahan,
                 ]
             ]);
-        
         } elseif ($request->action == 'pdf') {
             return "Logika PDF Pembelian (Belum Diimplementasikan)";
+        } else {
+            return view('admin.laporan.laporan_pembelian_result', compact('stokMasuk'));
         }
     }
 
     // ==========================================================
-    // BAGIAN 3: LAPORAN LABA RUGI (DENGAN RINCIAN)
+    // BAGIAN 3: LAPORAN LABA RUGI
     // ==========================================================
 
     public function showLabaRugiForm(): View
@@ -129,41 +144,56 @@ class LaporanController extends Controller
             'action' => 'required|in:tampilkan,pdf,json'
         ]);
 
-        // 1. AMBIL DATA PENJUALAN (Detail & Total)
-        $penjualanQuery = Transaksi::with('pelanggan')
+        // 1. AMBIL DATA PENJUALAN
+        $penjualanQuery = Transaksi::with(['pelanggan', 'detailTransaksis'])
+                            ->where('status', 'completed')
                             ->whereBetween('tanggal_transaksi', [
                                 $request->tanggal_mulai . ' 00:00:00', 
                                 $request->tanggal_akhir . ' 23:59:59'
                             ]);
-                            // ->where('status', 'lunas'); // Hapus filter status
 
         $listPenjualan = $penjualanQuery->orderBy('tanggal_transaksi', 'desc')->get();
         $totalPenjualan = $listPenjualan->sum('total_amount');
+        $totalDiskon = $listPenjualan->sum('total_diskon');
 
-        // 2. AMBIL DATA PEMBELIAN (Detail & Total)
-        $pembelianQuery = Pembelian::with('supplier')
-                            ->whereBetween('tanggal_pembelian', [
+        // 2. AMBIL DATA PEMBELIAN DARI STOK BARANG
+        $pembelianQuery = StokBarang::with('produk')
+                            ->whereIn('jenis_perubahan', ['pembelian', 'adjustment_masuk', 'retur', 'lainnya'])
+                            ->where('qty_masuk', '>', 0)
+                            ->whereBetween('tanggal_perubahan', [
                                 $request->tanggal_mulai . ' 00:00:00', 
                                 $request->tanggal_akhir . ' 23:59:59'
                             ]);
-                            // ->where('status', 'lunas'); // Hapus filter status
 
-        $listPembelian = $pembelianQuery->orderBy('tanggal_pembelian', 'desc')->get();
-        $totalPembelian = $listPembelian->sum('total_biaya');
+        $listPembelian = $pembelianQuery->orderBy('tanggal_perubahan', 'desc')->get();
+        
+        // Calculate total purchase cost
+        $totalPembelian = $listPembelian->sum(function ($item) {
+            return $item->qty_masuk * $item->produk->harga_dasar;
+        });
 
-        // 3. Hitung Laba Bersih
-        $labaBersih = $totalPenjualan - $totalPembelian;
+        // 3. Calculate Harga Pokok Penjualan (HPP)
+        $hpp = 0;
+        foreach ($listPenjualan as $transaksi) {
+            foreach ($transaksi->detailTransaksis as $detail) {
+                $hpp += $detail->qty * $detail->produk->harga_dasar;
+            }
+        }
 
-        // Struktur Data Lengkap (Summary + Details)
+        // 4. Calculate Laba Kotor
+        $labaKotor = $totalPenjualan - $hpp;
+
         $dataLabaRugi = [
             'summary' => [
                 'pendapatan' => $totalPenjualan,
+                'diskon' => $totalDiskon,
                 'pengeluaran' => $totalPembelian,
-                'laba_bersih' => $labaBersih,
+                'hpp' => $hpp,
+                'laba_kotor' => $labaKotor,
             ],
             'details' => [
-                'penjualan' => $listPenjualan, // Kirim detail transaksi
-                'pembelian' => $listPembelian  // Kirim detail pembelian
+                'penjualan' => $listPenjualan,
+                'pembelian' => $listPembelian
             ],
             'periode' => [
                 'mulai' => $request->tanggal_mulai,

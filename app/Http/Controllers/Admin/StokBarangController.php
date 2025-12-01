@@ -40,7 +40,7 @@ class StokBarangController extends Controller
             ->paginate(10);
 
         $produks = Produk::where('is_active', true)->orderBy('nama_produk')->get();
-        $jenisPerubahan = ['penjualan', 'pembelian', 'adjustment', 'retur'];
+        $jenisPerubahan = StokBarang::getJenisPerubahanOptions();
 
         return view('admin.stok-barang.index', compact(
             'stokBarangs', 
@@ -84,29 +84,54 @@ class StokBarangController extends Controller
         ));
     }
 
-    public function createAdjustment()
+    public function create()
     {
         $produks = Produk::where('is_active', true)->orderBy('nama_produk')->get();
-        return view('admin.stok-barang.adjustment', compact('produks'));
+        $jenisPerubahan = StokBarang::getJenisPerubahanOptions();
+        
+        return view('admin.stok-barang.create', compact('produks', 'jenisPerubahan'));
     }
 
-    public function storeAdjustment(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'produk_id' => 'required|exists:produks,id',
-            'qty_masuk' => 'required_without:qty_keluar|integer|min:0',
-            'qty_keluar' => 'required_without:qty_masuk|integer|min:0',
+            'jenis_perubahan' => 'required|in:pembelian,adjustment,retur,lainnya',
+            'quantity' => 'required|integer|min:1',
             'keterangan' => 'required|string|max:500',
             'tanggal_perubahan' => 'required|date',
         ]);
 
         $produk = Produk::findOrFail($request->produk_id);
-
-        // Calculate new stock
-        $qtyMasuk = $request->qty_masuk ?? 0;
-        $qtyKeluar = $request->qty_keluar ?? 0;
         $stokAwal = $produk->stok_sekarang;
-        $stokAkhir = $stokAwal + $qtyMasuk - $qtyKeluar;
+
+        // Calculate new stock based on type
+        switch ($request->jenis_perubahan) {
+            case 'pembelian':
+            case 'retur':
+            case 'lainnya':
+                // These types increase stock
+                $qtyMasuk = $request->quantity;
+                $qtyKeluar = 0;
+                $stokAkhir = $stokAwal + $qtyMasuk;
+                break;
+            
+            case 'adjustment':
+                // For adjustment, quantity can be positive or negative
+                if ($request->quantity >= 0) {
+                    $qtyMasuk = $request->quantity;
+                    $qtyKeluar = 0;
+                    $stokAkhir = $stokAwal + $qtyMasuk;
+                } else {
+                    $qtyMasuk = 0;
+                    $qtyKeluar = abs($request->quantity);
+                    $stokAkhir = $stokAwal - $qtyKeluar;
+                }
+                break;
+            
+            default:
+                return redirect()->back()->with('error', 'Jenis perubahan tidak valid.');
+        }
 
         if ($stokAkhir < 0) {
             return redirect()->back()->with('error', 'Stok akhir tidak boleh minus.');
@@ -119,7 +144,7 @@ class StokBarangController extends Controller
             'qty_keluar' => $qtyKeluar,
             'qty_masuk' => $qtyMasuk,
             'qty_akhir' => $stokAkhir,
-            'jenis_perubahan' => 'adjustment',
+            'jenis_perubahan' => $request->jenis_perubahan,
             'keterangan' => $request->keterangan,
             'transaksi_id' => null,
             'tanggal_perubahan' => Carbon::parse($request->tanggal_perubahan),
@@ -131,7 +156,7 @@ class StokBarangController extends Controller
         ]);
 
         return redirect()->route('admin.stok-barang.index')
-            ->with('success', 'Adjustment stok berhasil dilakukan.');
+            ->with('success', 'Perubahan stok berhasil dicatat.');
     }
 
     public function export(Request $request)
@@ -155,8 +180,67 @@ class StokBarangController extends Controller
 
         $stokBarangs = $query->orderBy('tanggal_perubahan', 'desc')->get();
 
-        // In a real application, you would generate Excel or PDF here
-        // For now, we'll just return a view with the data
         return view('admin.stok-barang.export', compact('stokBarangs'));
+    }
+
+    // Keep the old adjustment methods for backward compatibility, but mark as deprecated
+    public function createAdjustment()
+    {
+        $produks = Produk::where('is_active', true)->orderBy('nama_produk')->get();
+        $jenisPerubahanOptions = StokBarang::getJenisPerubahanOptions();
+        
+        return view('admin.stok-barang.adjustment', compact('produks', 'jenisPerubahanOptions'));
+    }
+
+    public function storeAdjustment(Request $request)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produks,id',
+            'jenis_perubahan' => 'required|in:pembelian,adjustment_masuk,adjustment_keluar,retur,lainnya',
+            'quantity' => 'required|integer|min:1',
+            'keterangan' => 'required|string|max:500',
+            'tanggal_perubahan' => 'required|date',
+        ]);
+
+        $produk = Produk::findOrFail($request->produk_id);
+
+        // Calculate new stock based on jenis perubahan
+        $stokAwal = $produk->stok_sekarang;
+        
+        switch ($request->jenis_perubahan) {
+            case 'pembelian':
+            case 'adjustment_masuk':
+            case 'retur':
+                $stokAkhir = $stokAwal + $request->quantity;
+                break;
+            case 'adjustment_keluar':
+            case 'lainnya':
+                $stokAkhir = $stokAwal - $request->quantity;
+                if ($stokAkhir < 0) {
+                    return redirect()->back()->with('error', 'Stok akhir tidak boleh minus.');
+                }
+                break;
+        }
+
+        // Create stock movement record
+        StokBarang::create([
+            'produk_id' => $request->produk_id,
+            'qty_awal' => $stokAwal,
+            'qty_keluar' => in_array($request->jenis_perubahan, ['adjustment_keluar', 'lainnya']) ? $request->quantity : 0,
+            'qty_masuk' => in_array($request->jenis_perubahan, ['pembelian', 'adjustment_masuk', 'retur']) ? $request->quantity : 0,
+            'qty_akhir' => $stokAkhir,
+            'jenis_perubahan' => $request->jenis_perubahan,
+            'keterangan' => $request->keterangan,
+            'transaksi_id' => null,
+            'tanggal_perubahan' => Carbon::parse($request->tanggal_perubahan),
+        ]);
+
+        // Update product stock
+        $produk->update([
+            'stok_sekarang' => $stokAkhir,
+        ]);
+
+        return redirect()->route('admin.stok-barang.index')
+            ->with('success', 'Perubahan stok berhasil dilakukan.');
     }
 }

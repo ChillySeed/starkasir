@@ -43,7 +43,8 @@
     <div class="min-h-screen flex items-center justify-center">
         <div class="w-[460px] card rounded-2xl p-10 shadow-xl">
             <div class="text-center">
-                <h2 class="text-5xl font-extrabold accent">Login</h2>
+                <img src="{{ asset('images/starlogowhite.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-4">
+                <h2 class="text-3xl font-extrabold accent">Login</h2>
             </div>
 
             @if ($errors->any())
