@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filter Laporan Pembelian - POS System</title>
+    <title>Laporan Pembelian - POS System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- CSS untuk Print Struk -->
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+        }
         @media print {
             body * {
                 visibility: hidden;
@@ -35,23 +39,42 @@
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="text-gray-800">
     <!-- Navigation -->
-    <nav class="bg-blue-600 text-white shadow-lg no-print">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-cash-register text-2xl"></i>
-                    <span class="text-xl font-bold">POS System - Admin</span>
+    <nav class="bg-white border-b border-gray-200 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-4">
+                    <img src="{{ asset('images/starlogo.png') }}" alt="Logo" class="h-10 w-auto">
+                    <div class="w-px h-8 bg-gray-300"></div>
+                    <h1 class="text-xl font-bold text-gray-900">Laporan Pembelian (Stok Masuk)</h1>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span>Halo, {{ auth()->user()->nama ?? 'Admin' }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                <div class="flex items-center gap-4">
+                    <div class="relative" id="userDropdown">
+                        <button class="flex items-center gap-0 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                            <img src="https://ui-avatars.com/api/?name={{ auth()->user()->nama }}&background=FCD34D&color=1F2937" class="w-9 h-9 rounded-l-lg">
+                            <div class="px-3 py-1.5 flex items-center gap-2">
+                                <span class="text-sm font-medium text-gray-700">{{ auth()->user()->nama }}</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                            </div>
                         </button>
-                    </form>
+                        
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50" id="dropdownMenu">
+                            <div class="py-1">
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p class="text-xs text-gray-500">Signed in as</p>
+                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->nama }}</p>
+                                </div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -60,97 +83,147 @@
     <!-- Sidebar and Main Content -->
     <div class="flex">
         <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-lg min-h-screen no-print sidebar-container">
+        <div class="w-64 bg-white shadow-sm min-h-screen border-r border-gray-200 no-print sidebar-container">
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
-                    <a href="{{ route('admin.laporan.index') }}" class="flex items-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <i class="fas fa-arrow-left mr-3"></i> Kembali ke Menu
+                    <a href="{{ route('admin.dashboard') }}" 
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-tachometer-alt mr-3 w-5"></i>
+                        Dashboard
                     </a>
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
-                    </a>
-                    <a href="{{ route('admin.produk.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-box mr-3"></i> Manajemen Produk
+                    <a href="{{ route('admin.produk.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-box mr-3 w-5"></i>
+                        Manajemen Produk
                     </a>
                     <a href="{{ route('admin.stok-barang.index') }}" 
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-warehouse mr-3"></i>
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-warehouse mr-3 w-5"></i>
                         Riwayat Stok
                     </a>
-                    <a href="{{ route('admin.level-harga.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-tags mr-3"></i> Level Harga
+                    <a href="{{ route('admin.level-harga.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-tags mr-3 w-5"></i>
+                        Level Harga
                     </a>
-                    <a href="{{ route('admin.golongan.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-users mr-3"></i> Golongan Member
+                    <a href="{{ route('admin.golongan.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-users mr-3 w-5"></i>
+                        Golongan Member
                     </a>
-                    <a href="{{ route('admin.pelanggan.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-user-friends mr-3"></i> Data Pelanggan
+                    <a href="{{ route('admin.pelanggan.index') }}" 
+                        class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                        <i class="fas fa-user-friends mr-3 w-5"></i>
+                        Data Pelanggan
                     </a>
-                    <a href="{{ route('admin.laporan.index') }}" class="flex items-center px-4 py-3 bg-blue-100 text-blue-700 rounded-lg">
-                        <i class="fas fa-chart-bar mr-3"></i> Laporan
+                    <a href="{{ route('admin.laporan.index') }}" 
+                        class="flex items-center px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-medium border border-blue-200">
+                        <i class="fas fa-chart-bar mr-3 w-5 text-blue-600"></i>
+                        Laporan
                     </a>
                 </div>
             </nav>
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 p-8 no-print">
-            <h1 class="text-3xl font-bold text-gray-800 mb-8">Laporan Data Pembelian (Stok Masuk)</h1>
+        <div class="flex-1 p-6">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Laporan Data Pembelian (Stok Masuk)</h2>
+                    <p class="text-gray-600 mt-1">Filter dan tampilkan laporan pembelian sesuai periode</p>
+                </div>
+                <a href="{{ route('admin.laporan.index') }}" 
+                    class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>Kembali
+                </a>
+            </div>
 
-            <!-- Form Filter -->
-            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
-                <form action="{{ route('admin.laporan.pembelian.generate') }}" method="GET" id="filterForm">
-                    
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Filter Periode</h2>
-                    
-                    <!-- Tombol Preset -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button type="button" id="btnHariIni" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium preset-btn">Hari Ini</button>
-                        <button type="button" id="btnKemarin" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium preset-btn">Kemarin</button>
-                        <button type="button" id="btn7Hari" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium preset-btn">7 Hari Terakhir</button>
-                        <button type="button" id="btnBulanIni" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium preset-btn">Bulan Ini</button>
-                        <button type="button" id="btnBulanLalu" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium preset-btn">Bulan Lalu</button>
+            <div class="max-w-6xl mx-auto">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-base font-semibold text-gray-900">Filter Laporan Pembelian</h3>
                     </div>
+                    <div class="p-6">
+                        <form action="{{ route('admin.laporan.pembelian.generate') }}" method="GET" id="filterForm">
+                            
+                            <!-- Filter Periode -->
+                            <div class="mb-6">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3">Filter Periode</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" class="preset-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors" id="btnHariIni">Hari Ini</button>
+                                    <button type="button" class="preset-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors" id="btnKemarin">Kemarin</button>
+                                    <button type="button" class="preset-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors" id="btn7Hari">7 Hari Terakhir</button>
+                                    <button type="button" class="preset-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors" id="btnBulanIni">Bulan Ini</button>
+                                    <button type="button" class="preset-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors" id="btnBulanLalu">Bulan Lalu</button>
+                                </div>
+                            </div>
 
-                    <!-- Filter Tanggal Custom -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                            <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="{{ date('Y-m-d') }}">
+                            <!-- Filter Tanggal Custom -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div>
+                                    <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai *</label>
+                                    <input type="date" name="tanggal_mulai" id="tanggal_mulai" required
+                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                                        value="{{ date('Y-m-d') }}">
+                                </div>
+                                <div>
+                                    <label for="tanggal_akhir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir *</label>
+                                    <input type="date" name="tanggal_akhir" id="tanggal_akhir" required
+                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                                        value="{{ date('Y-m-d') }}">
+                                </div>
+                            </div>
+
+                            <!-- Filter Lainnya -->
+                            <div class="mb-8">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-3">Filter Lainnya</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="jenis_perubahan" class="block text-sm font-medium text-gray-700 mb-1">Jenis Pembelian</label>
+                                        <select name="jenis_perubahan" id="jenis_perubahan" 
+                                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer">
+                                            <option value="">Semua Jenis</option>
+                                            <option value="pembelian">Pembelian (Restock)</option>
+                                            <option value="adjustment_masuk">Adjustment Masuk</option>
+                                            <option value="adjustment">Adjustment</option>
+                                            <option value="retur">Retur dari Pelanggan</option>
+                                            <option value="lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tombol Aksi -->
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="submit" name="action" value="pdf" class="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
+                                    <i class="fas fa-file-pdf"></i>Download PDF
+                                </button>
+                                <button type="button" id="showReportBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                    <i class="fas fa-eye"></i>Tampilkan Laporan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Information Card -->
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="shrink-0">
+                            <i class="fas fa-info-circle text-blue-600"></i>
                         </div>
-                        <div>
-                            <label for="tanggal_akhir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                            <input type="date" name="tanggal_akhir" id="tanggal_akhir" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="{{ date('Y-m-d') }}">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Informasi Filter</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Gunakan tombol preset untuk memilih periode dengan cepat</li>
+                                    <li>Atau masukkan tanggal custom untuk periode spesifik</li>
+                                    <li>Filter jenis pembelian untuk melihat tipe transaksi tertentu</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Filter Lainnya</h2>
-                    
-                    <!-- Filter Tambahan -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label for="jenis_perubahan" class="block text-sm font-medium text-gray-700 mb-1">Jenis Pembelian</label>
-                            <select name="jenis_perubahan" id="jenis_perubahan" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Semua Jenis</option>
-                                <option value="pembelian">Pembelian (Restock)</option>
-                                <option value="adjustment_masuk">Adjustment Masuk</option>
-                                <option value="adjustment">Adjustment</option>
-                                <option value="retur">Retur dari Pelanggan</option>
-                                <option value="lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Tombol Aksi -->
-                    <div class="flex items-center justify-end gap-4">
-                        <button type="submit" name="action" value="pdf" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
-                            <i class="fas fa-file-pdf mr-2"></i>Download PDF
-                        </button>
-                        <button type="button" id="showReportBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-eye mr-2"></i>Tampilkan Laporan
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -160,7 +233,7 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
             <!-- Modal Header -->
             <div class="flex justify-between items-center p-4 border-b no-print">
-                <h3 class="text-lg font-medium">Hasil Laporan Pembelian (Stok Masuk)</h3>
+                <h3 class="text-lg font-medium text-gray-900">Hasil Laporan Pembelian (Stok Masuk)</h3>
                 <button id="closeReport" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times fa-lg"></i>
                 </button>
@@ -206,13 +279,11 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="reportTableBody">
-                            <!-- Data akan diisi oleh JavaScript -->
                             <tr>
                                 <td colspan="7" class="p-8 text-center text-gray-500">Memuat data...</td>
                             </tr>
                         </tbody>
                         <tfoot class="bg-gray-50 font-bold" id="reportTableFoot">
-                            <!-- Total akan diisi oleh JavaScript -->
                             <tr>
                                 <td colspan="5" class="px-4 py-2 text-right uppercase">Total Nilai Pembelian:</td>
                                 <td class="px-4 py-2 text-right" id="reportTotal">Rp 0</td>
@@ -225,10 +296,10 @@
 
             <!-- Modal Footer -->
             <div class="flex justify-end items-center p-4 border-t gap-3 no-print">
-                <button id="printReport" class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-                    <i class="fas fa-print mr-2"></i>Cetak
+                <button id="printReport" class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-print"></i>Cetak
                 </button>
-                <button id="closeReportSecondary" class="px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                <button id="closeReportSecondary" class="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors">
                     Tutup
                 </button>
             </div>
@@ -278,9 +349,10 @@
         }
 
         $(document).ready(function() {
-            // --- Logika untuk Tombol Preset Tanggal ---
             const tglMulai = $('#tanggal_mulai');
             const tglAkhir = $('#tanggal_akhir');
+            const presetBtns = $('.preset-btn');
+            let activePresetBtn = $('#btnHariIni');
             
             function setTanggal(mulai, akhir) {
                 tglMulai.val(mulai);
@@ -292,52 +364,79 @@
                 return date.toISOString().split('T')[0];
             }
 
+            function updatePresetBtnStyle(btn) {
+                presetBtns.removeClass('bg-blue-500 text-white hover:bg-blue-600').addClass('bg-gray-200 text-gray-700 hover:bg-gray-300');
+                btn.removeClass('bg-gray-200 text-gray-700 hover:bg-gray-300').addClass('bg-blue-500 text-white hover:bg-blue-600');
+                activePresetBtn = btn;
+            }
+
             const today = new Date();
             setTanggal(formatDateYMD(today), formatDateYMD(today));
 
-            $('#btnHariIni').click(() => {
+            $('#btnHariIni').click(function() {
                 const now = new Date();
                 setTanggal(formatDateYMD(now), formatDateYMD(now));
+                updatePresetBtnStyle($(this));
             });
             
-            $('#btnKemarin').click(() => {
+            $('#btnKemarin').click(function() {
                 const yesterday = new Date();
                 yesterday.setDate(today.getDate() - 1);
                 setTanggal(formatDateYMD(yesterday), formatDateYMD(yesterday));
+                updatePresetBtnStyle($(this));
             });
             
-            $('#btn7Hari').click(() => {
+            $('#btn7Hari').click(function() {
                 const last7 = new Date();
                 last7.setDate(today.getDate() - 6);
                 setTanggal(formatDateYMD(last7), formatDateYMD(today));
+                updatePresetBtnStyle($(this));
             });
             
-            $('#btnBulanIni').click(() => {
+            $('#btnBulanIni').click(function() {
                 const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                 setTanggal(formatDateYMD(startOfMonth), formatDateYMD(today));
+                updatePresetBtnStyle($(this));
             });
             
-            $('#btnBulanLalu').click(() => {
+            $('#btnBulanLalu').click(function() {
                 const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                 const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
                 setTanggal(formatDateYMD(startOfLastMonth), formatDateYMD(endOfLastMonth));
+                updatePresetBtnStyle($(this));
             });
 
-            // --- Logika Modal ---
+            // Reset preset style ketika tanggal manual diubah
+            tglMulai.add(tglAkhir).on('change', function() {
+                presetBtns.removeClass('bg-blue-500 text-white hover:bg-blue-600').addClass('bg-gray-200 text-gray-700 hover:bg-gray-300');
+                activePresetBtn = null;
+            });
+
+            // User Dropdown Toggle
+            const userDropdownBtn = document.querySelector('#userDropdown button');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            userDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!document.getElementById('userDropdown').contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
 
             // Tampilkan Laporan (via AJAX)
             $('#showReportBtn').click(function() {
                 const formData = $('#filterForm').serialize();
                 
-                // Tampilkan loading di tabel
                 $('#reportTableBody').html('<tr><td colspan="7" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data laporan...</td></tr>');
                 $('#summaryCards').html('<div class="col-span-3 p-4 text-center"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat summary...</div>');
                 $('#reportTotal').text('Menghitung...');
                 
-                // Tampilkan modal
                 $('#reportModal').removeClass('hidden').addClass('flex');
 
-                // Panggil AJAX
                 $.ajax({
                     url: "{{ route('admin.laporan.pembelian.generate') }}",
                     type: 'GET',
